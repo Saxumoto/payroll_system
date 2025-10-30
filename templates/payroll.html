@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Payslip{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Payslip</h2>
+
+    {% if details %}
+    <div class="card p-4 shadow-sm mx-auto" style="max-width: 600px;">
+        
+        {% if details.photo %}
+        <div class="text-center mb-3">
+            <img src="{{ url_for('static', filename='uploads/' ~ details.photo) }}" class="img-thumbnail rounded-circle" style="max-width: 120px;">
+        </div>
+        {% endif %}
+
+        <table class="table table-borderless">
+            <tr><th>Name:</th><td>{{ details.name or 'N/A' }}</td></tr>
+            <tr><th>Position:</th><td>{{ details.position or 'N/A' }}</td></tr>
+            <tr><th>Department:</th><td>{{ details.department or '—' }}</td></tr>
+            <tr><th>Payroll Period:</th><td>{{ details.payroll_period or '—' }}</td></tr>
+            <tr><th>Date Issued:</th><td>{{ details.date or '—' }}</td></tr>
+            <tr><th>Base Salary:</th><td>₱{{ "{:,.2f}".format(details.salary|default(0)) }}</td></tr>
+            <tr><th>SSS Deduction:</th><td>₱{{ "{:,.2f}".format(details.sss|default(0)) }}</td></tr>
+            <tr><th>PhilHealth Deduction:</th><td>₱{{ "{:,.2f}".format(details.philhealth|default(0)) }}</td></tr>
+            <tr><th>Pag-IBIG Deduction:</th><td>₱{{ "{:,.2f}".format(details.pagibig|default(0)) }}</td></tr>
+            <tr class="table-light">
+                <th>Net Salary:</th>
+                <td><strong>₱{{ "{:,.2f}".format(details.net_salary|default(0)) }}</strong></td>
+            </tr>
+        </table>
+
+        <a href="/payroll/{{ details.id }}/pdf" class="btn btn-info w-100 mt-3">📥 Download PDF</a>
+        <button onclick="window.print()" class="btn btn-outline-secondary w-100 mt-2">🖨️ Print Payslip</button>
+    </div>
+
+    {% else %}
+    <div class="alert alert-danger text-center">Employee not found.</div>
+    {% endif %}
+</div>
+{% endblock %}

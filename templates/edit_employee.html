@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Edit Employee</h2>
+<form method="POST" class="mt-4">
+    <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input type="text" name="name" class="form-control" value="{{ employee[1] }}" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Position</label>
+        <input type="text" name="position" class="form-control" value="{{ employee[2] }}" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Salary</label>
+        <input type="number" name="salary" class="form-control" value="{{ employee[3] }}" required>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Payroll Period</label>
+        <input type="text" name="payroll_period" class="form-control" value="{{ employee[4] }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Update</button>
+    <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+    <div class="mb-3">
+        <label for="hourly_rate" class="form-label">Hourly Rate</label>
+        <input type="number" step="0.01" name="hourly_rate" id="hourly_rate" class="form-control" value="{{ emp.hourly_rate if emp else '' }}" required>
+    </div>
+</form>
+{% endblock %}

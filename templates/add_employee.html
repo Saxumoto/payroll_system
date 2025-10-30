@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Add New Employee{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Add New Employee</h2>
+
+  <form method="POST" enctype="multipart/form-data">
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label for="name" class="form-label">Name</label>
+        <input type="text" name="name" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label for="position" class="form-label">Position</label>
+        <input type="text" name="position" class="form-control" required>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label for="department" class="form-label">Department</label>
+        <input type="text" name="department" class="form-control" required>
+      </div>
+      <div class="col-md-6">
+        <label for="payroll_period" class="form-label">Payroll Period</label>
+        <input type="text" name="payroll_period" class="form-control" placeholder="e.g. October 2025" required>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label for="salary" class="form-label">Salary</label>
+        <input type="number" name="salary" class="form-control" step="0.01" required>
+      </div>
+      <div class="col-md-6">
+        <label for="date" class="form-label">Date</label>
+        <input type="date" name="date" class="form-control" required>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="photo" class="form-label">Upload Photo</label>
+      <input type="file" name="photo" class="form-control" accept="image/*" required>
+    </div>
+
+    <button type="submit" class="btn btn-success">➕ Add Employee</button>
+    <a href="/employees" class="btn btn-secondary ms-2">Cancel</a>
+  </form>
+</div>
+{% endblock %}

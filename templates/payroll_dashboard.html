@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Payroll Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper container py-4">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="text-white">Payroll Dashboard</h3>
+    <select class="form-select w-auto" name="contract_filter">
+      <option selected>Contract</option>
+      <option value="regular">Regular</option>
+      <option value="contractual">Contractual</option>
+    </select>
+  </div>
+
+  <!-- Summary Metrics -->
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card summary-card text-center">
+        <div class="card-body">
+          <h6>Total Employee</h6>
+          <h2>{{ total_employees or 0 }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card summary-card text-center">
+        <div class="card-body">
+          <h6>Total Payroll</h6>
+          <h2>₱{{ "{:,.2f}".format(total_payroll or 0) }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card summary-card text-center">
+        <div class="card-body">
+          <h6>Total Deduction</h6>
+          <h2>₱{{ "{:,.2f}".format(total_deduction or 0) }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card summary-card text-center">
+        <div class="card-body">
+          <h6>Net Pay</h6>
+          <h2 class="text-success">₱{{ "{:,.2f}".format(net_pay or 0) }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card summary-card text-center">
+        <div class="card-body">
+          <h6>Total Contribution</h6>
+          <h2>₱{{ "{:,.2f}".format(total_contribution or 0) }}</h2>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card summary-card text-center">
+        <div class="card-body">
+          <h6>Total Loan</h6>
+          <h2>₱{{ "{:,.2f}".format(total_loan or 0) }}</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Employee Management Table -->
+  <div class="mt-5">
+    <h5 class="text-white mb-3">Employee Management</h5>
+    <div class="card p-3">
+      <table class="table table-bordered table-hover">
+        <thead class="table-primary">
+          <tr>
+            <th>Name</th>
+            <th>Position</th>
+            <th>Department</th>
+            <th>Salary</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for emp in employees %}
+          <tr>
+            <td>{{ emp.name }}</td>
+            <td>{{ emp.position }}</td>
+            <td>{{ emp.department }}</td>
+            <td>₱{{ "{:,.2f}".format(emp.salary or 0) }}</td>
+            <td><a href="/payroll/{{ emp.id }}" class="btn btn-sm btn-outline-primary">View</a></td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" class="text-center text-muted">No employees found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

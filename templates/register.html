@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <img src="{{ url_for('static', filename='img/raw.png') }}" alt="Logo">
+    <h2>Create Account</h2>
+    <p>Join The Visa Center - Davao</p>
+    <form method="POST">
+      <div class="mb-3 text-start">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" name="username" required>
+      </div>
+      <div class="mb-3 text-start">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Register</button>
+    </form>
+    <a href="/login" class="link">Already have an account? Sign in</a>
+  </div>
+</div>
+{% endblock %}

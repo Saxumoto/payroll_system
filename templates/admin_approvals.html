@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Admin Approvals{% endblock %}
+{% block content %}
+<h2>Pending Admin Requests</h2>
+<table class="table table-bordered">
+    <thead class="table-primary">
+        <tr><th>Username</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+        {% for user in pending %}
+        <tr>
+            <td>{{ user[1] }}</td>
+            <td>
+                <a href="/admin/approve/{{ user[0] }}" class="btn btn-sm btn-success">Approve</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

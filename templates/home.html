@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Welcome{% endblock %}
+{% block content %}
+<div class="text-center mt-5">
+    <h2 class="mb-4">Welcome to the Payroll Management System</h2>
+    <p class="lead">This portal is for authorized administrators only.</p>
+    <div class="d-grid gap-3 col-6 mx-auto mt-4">
+        <a href="/login" class="btn btn-primary btn-lg">Admin Login</a>
+        <a href="/register" class="btn btn-success btn-lg">Create Admin Account</a>
+    </div>
+</div>
+{% endblock %}

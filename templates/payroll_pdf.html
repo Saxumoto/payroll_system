@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payslip</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 40px;
+            color: #333;
+        }
+        h2 {
+            color: #0d6efd;
+            border-bottom: 2px solid #0d6efd;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .label {
+            font-weight: bold;
+            width: 180px;
+            display: inline-block;
+        }
+        .value {
+            display: inline-block;
+        }
+        .net {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #198754;
+        }
+        .footer {
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h2>Payslip</h2>
+
+    {% if details %}
+    <div class="section">
+        <div><span class="label">Employee Name:</span> <span class="value">{{ details.name }}</span></div>
+        <div><span class="label">Position:</span> <span class="value">{{ details.position }}</span></div>
+    </div>
+    <div class="section">
+    <div><span class="label">Base Salary:</span> ₱{{ "{:,.2f}".format(details.salary|default(0)) }}</div>
+    <div><span class="label">SSS Deduction:</span> ₱{{ "{:,.2f}".format(details.sss|default(0)) }}</div>
+    <div><span class="label">PhilHealth Deduction:</span> ₱{{ "{:,.2f}".format(details.philhealth|default(0)) }}</div>
+    <div><span class="label">Pag-IBIG Deduction:</span> ₱{{ "{:,.2f}".format(details.pagibig|default(0)) }}</div>
+</div>
+
+<div class="section net">
+    <div><span class="label">Net Salary:</span> ₱{{ "{:,.2f}".format(details.net_salary|default(0)) }}</div>
+</div>
+
+    <div class="section net">
+        <div><span class="label">Net Salary:</span> ₱{{ "{:,.2f}".format(details.net_salary) }}</div>
+    </div>
+
+    <div class="footer">
+        This payslip is system-generated and does not require a signature.
+    </div>
+    {% else %}
+    <p>Employee not found.</p>
+    {% endif %}
+</body>
+</html>
