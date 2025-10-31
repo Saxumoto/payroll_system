@@ -21,6 +21,7 @@ import pdfkit
 import sqlite3
 import csv
 import io
+from io import StringIO
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 
@@ -37,13 +38,6 @@ from reportlab.platypus import (
 )
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.pdfgen import canvas
-
-class CustomCanvas(canvas.Canvas):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setAuthor("The Visa Center - Davao")
-        self.setTitle("Employee Payslip")
-        self.setSubject("Payroll Document")
 
 # 🧾 Modular PDF Generator
 from services.pdf_generator import generate_payslip_pdf
@@ -65,22 +59,11 @@ login_manager.login_view = 'login'
 def inject_year():
     return {'current_year': datetime.now().year}
 
-# 🖨️ Custom Canvas for PDF Metadata
-class CustomCanvas(canvas.Canvas):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setAuthor("The Visa Center - Davao")
-        self.setTitle("Employee Payslip")
-        self.setSubject("Payroll Document")
-
 # 📅 Utility: Get current date as string
 def get_current_date():
     return datetime.now().strftime('%Y-%m-%d')  # Format: 2025-10-30
 # 🔧 Initialize database
 init_db()
-
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'
 
 # 🔐 Login setup
 login_manager = LoginManager()
@@ -203,9 +186,9 @@ def add():
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
         c.execute('''
-            INSERT INTO employees (name, position, department, payroll_period, salary, date, photo)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (name, position, department,  hourly_rate, payroll_period, salary, date, photo_filename))
+            INSERT INTO employees (name, position, department, salary, payroll_period, date, photo, hourly_rate)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (name, position, department, salary, payroll_period, date, photo_filename, hourly_rate))
         conn.commit()
         conn.close()
 
@@ -215,6 +198,8 @@ def add():
     return render_template('add_employee.html')
 
  # ✏️ Edit employee
+
+#Edit Employee
 @app.route('/edit/<int:employee_id>', methods=['GET', 'POST'])
 @login_required
 def edit_employee(employee_id):
@@ -257,9 +242,9 @@ def edit_employee(employee_id):
         # Update employee record
         c.execute('''
             UPDATE employees
-            SET name = ?, position = ?, department = ?, salary = ?, payroll_period = ?, date = ?, photo = ?
+            SET name = ?, position = ?, department = ?, salary = ?, payroll_period = ?, date = ?, photo = ?, hourly_rate = ?
             WHERE id = ?
-        ''', (name, position, department, salary, hourly_rate, payroll_period, date, photo_filename, employee_id))
+        ''', (name, position, department, salary, payroll_period, date, photo_filename, hourly_rate, employee_id))
         conn.commit()
         conn.close()
 
@@ -525,140 +510,31 @@ def employee_dashboard():
 @app.route('/payroll/<int:emp_id>/pdf')
 @login_required
 def download_payslip_pdf(emp_id):
-    import sqlite3, io
-    from flask import send_file, flash, redirect
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib import colors
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-    from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.pdfgen import canvas
-
     # 📦 Fetch employee data
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute('SELECT * FROM employees WHERE id = ?', (emp_id,))
     emp = c.fetchone()
+    conn.close()
 
     if not emp:
-        conn.close()
         flash("Employee not found.", "danger")
         return redirect('/payroll')
 
-    # 📊 Fetch attendance and loan data
-    c.execute('SELECT * FROM attendance WHERE employee_id = ? AND payroll_period = ?', (emp_id, emp['payroll_period']))
-    att = c.fetchone()
-    overtime_hours = att['overtime_hours'] if att else 0
-    absences = att['absences'] if att else 0
-
-    c.execute('SELECT loan FROM deductions WHERE employee_id = ? AND payroll_period = ?', (emp_id, emp['payroll_period']))
-    ded = c.fetchone()
-    loan = ded['loan'] if ded else 0
-
-    conn.close()
-
-    # 💰 Calculations
-    salary = float(emp['salary'])
-    hourly_rate = salary / 22 / 8
-    overtime_pay = overtime_hours * hourly_rate * 1.25
-    absence_deduction = absences * 8 * hourly_rate
-    gross_pay = salary + overtime_pay - absence_deduction
-
-    sss = salary * 0.01
-    philhealth = salary * 0.015
-    pagibig = salary * 0.01
-    net_pay = gross_pay - (sss + philhealth + pagibig + loan)
-
-    # Round values
-    salary = round(salary, 2)
-    overtime_pay = round(overtime_pay, 2)
-    absence_deduction = round(absence_deduction, 2)
-    gross_pay = round(gross_pay, 2)
-    sss = round(sss, 2)
-    philhealth = round(philhealth, 2)
-    pagibig = round(pagibig, 2)
-    loan = round(loan, 2)
-    net_pay = round(net_pay, 2)
-
-    # 📄 PDF setup
-    buffer = io.BytesIO()
-    styles = getSampleStyleSheet()
-    elements = []
-
-    # 🏷️ Header
-    elements.append(Paragraph("The Visa Center - Davao", styles['Title']))
-    elements.append(Paragraph("Employee Payslip", styles['Heading2']))
-    elements.append(Spacer(1, 12))
-
-    # 👤 Employee Info Table
-    info_data = [
-        ['Employee Name', emp['name']],
-        ['Position', emp['position']],
-        ['Department', emp['department']],
-        ['Payroll Period', emp['payroll_period']],
-    ]
-    info_table = Table(info_data, colWidths=[150, 300])
-    info_table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 11),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
-    elements.append(info_table)
-    elements.append(Spacer(1, 12))
-
-    # 💸 Salary Breakdown Table
-    salary_data = [
-        ['Basic Salary', f"PHP {salary:,.2f}"],
-        ['Overtime Pay', f"PHP {overtime_pay:,.2f}"],
-        ['Absence Deduction', f"PHP {absence_deduction:,.2f}"],
-        ['SSS Deduction', f"PHP {sss:,.2f}"],
-        ['PhilHealth Deduction', f"PHP {philhealth:,.2f}"],
-        ['Pag-IBIG Deduction', f"PHP {pagibig:,.2f}"],
-        ['Loan Deduction', f"PHP {loan:,.2f}"],
-        ['Net Pay', f"PHP {net_pay:,.2f}"],
-    ]
-    salary_table = Table(salary_data, colWidths=[200, 250])
-    salary_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, 0), colors.lightgrey),
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 11),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-    ]))
-    elements.append(salary_table)
-    elements.append(Spacer(1, 24))
-
-    # 📝 Footer
-    elements.append(Paragraph("This is a system-generated payslip. No signature required.", styles['Normal']))
-
-    # 🖨️ Metadata Canvas
-    class CustomCanvas(canvas.Canvas):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self._set_metadata()
-
-        def _set_metadata(self):
-            self.setAuthor("The Visa Center - Davao")
-            self.setTitle("Employee Payslip")
-            self.setSubject("Payroll Document")
-
-        def showPage(self):
-            self._set_metadata()
-            super().showPage()
-
-        def save(self):
-            self._set_metadata()
-            super().save()
-
-    # 📦 Build PDF
-    doc = SimpleDocTemplate(buffer, pagesize=A4)
-    doc.build(elements, canvasmaker=CustomCanvas)
-    buffer.seek(0)
-
-    return send_file(buffer, as_attachment=True, download_name=f"payslip_{emp_id}.pdf", mimetype='application/pdf')
-
+    # 🖨️ Generate PDF using the service
+    try:
+        buffer = generate_payslip_pdf(emp)
+        return send_file(
+            buffer, 
+            as_attachment=True, 
+            download_name=f"payslip_{emp['name'].replace(' ', '_')}_{emp['payroll_period']}.pdf", 
+            mimetype='application/pdf'
+        )
+    except Exception as e:
+        flash(f"Error generating PDF: {e}", "danger")
+        return redirect(url_for('view_payslip', emp_id=emp_id))
+    
 # 📄 Bulk Payslip Generation for Payroll Period
 @app.route('/payroll/payslips/<period>')
 @login_required

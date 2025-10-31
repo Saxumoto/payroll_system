@@ -13,7 +13,12 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             position TEXT NOT NULL,
-            salary REAL NOT NULL
+            salary REAL NOT NULL,
+            department TEXT,
+            payroll_period TEXT,
+            date TEXT,
+            photo TEXT,
+            hourly_rate REAL
         )
     ''')
 
@@ -23,13 +28,40 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
-            role TEXT DEFAULT 'admin'
+            role TEXT DEFAULT 'admin',
+            status TEXT DEFAULT 'approved'
+        )
+    ''')
+
+    # Create attendance table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS attendance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            employee_id INTEGER NOT NULL,
+            date TEXT,
+            clock_in TEXT,
+            clock_out TEXT,
+            total_hours REAL,
+            overtime_hours REAL DEFAULT 0,
+            absences REAL DEFAULT 0,
+            payroll_period TEXT,
+            FOREIGN KEY (employee_id) REFERENCES employees (id)
+        )
+    ''')
+
+    # Create deductions table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS deductions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            employee_id INTEGER NOT NULL,
+            loan REAL DEFAULT 0,
+            payroll_period TEXT,
+            FOREIGN KEY (employee_id) REFERENCES employees (id)
         )
     ''')
 
     conn.commit()
     conn.close()
-
 # 👤 Flask-Login user model
 class User(UserMixin):
     def __init__(self, id, username, password, role='admin', status='approved'):
@@ -70,11 +102,13 @@ def add_user(username, password, role='admin'):
     print(f"Admin user '{username}' created successfully.")
 
 # ➕ Add employee
-def add_employee(name, position, department, salary, payroll_period, date, photo):
+def add_employee(name, position, department, salary, payroll_period, date, photo, hourly_rate):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute('INSERT INTO employees (name, position, department, salary, payroll_period, date, photo) VALUES (?, ?, ?, ?, ?, ?, ?)',
-              (name, position, department, salary, payroll_period, date, photo))
+    c.execute('''
+        INSERT INTO employees (name, position, department, salary, payroll_period, date, photo, hourly_rate) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (name, position, department, salary, payroll_period, date, photo, hourly_rate))
     conn.commit()
     conn.close()
 
@@ -97,11 +131,14 @@ def get_employee_by_id(emp_id):
     return employee
 
 # ✏️ Update employee
-def update_employee(emp_id, name, position, salary, payroll_period):
+def update_employee(emp_id, name, position, department, salary, payroll_period, date, photo, hourly_rate):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute('UPDATE employees SET name = ?, position = ?, salary = ?, payroll_period = ? WHERE id = ?',
-              (name, position, salary, payroll_period, emp_id))
+    c.execute('''
+        UPDATE employees 
+        SET name = ?, position = ?, department = ?, salary = ?, payroll_period = ?, date = ?, photo = ?, hourly_rate = ?
+        WHERE id = ?
+    ''', (name, position, department, salary, payroll_period, date, photo, hourly_rate, emp_id))
     conn.commit()
     conn.close()
 
