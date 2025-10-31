@@ -1,23 +1,64 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
 
-{% block content %}
-<div class="auth-wrapper">
-  <div class="auth-card">
-    <img src="{{ url_for('static', filename='img/raw.png') }}" alt="Logo">
-    <h2>Create Account</h2>
-    <p>Join The Visa Center - Davao</p>
-    <form method="POST">
-      <div class="mb-3 text-start">
-        <label for="username" class="form-label">Username</label>
-        <input type="text" class="form-control" id="username" name="username" required>
-      </div>
-      <div class="mb-3 text-start">
-        <label for="password" class="form-label">Password</label>
-        <input type="password" class="form-control" id="password" name="password" required>
-      </div>
-      <button type="submit" class="btn btn-primary w-100">Register</button>
-    </form>
-    <a href="/login" class="link">Already have an account? Sign in</a>
-  </div>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up - Payroll Management System</title>
+<!-- Link to the Auth stylesheet -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth_style.css') }}">
+<!-- Bootstrap Icons (for flash messages, if you add them) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+<div class="auth-container">
+<!-- Logo -->
+<div class="auth-logo">
+<img src="{{ url_for('static', filename='img/raw.png') }}" alt="Logo"
+onerror="this.style.display='none'">
 </div>
-{% endblock %}
+
+<!-- Auth Card -->
+<div class="auth-card">
+    <h2>Create Account</h2>
+    <p>Get started with a new account</p>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Registration Form -->
+    <form class="auth-form" method="POST" action="{{ url_for('register') }}">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="confirm_password">Confirm Password</label>
+            <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-gradient">Create Account</button>
+    </form>
+
+    <div class="auth-switch">
+        <p>Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
+    </div>
+</div>
+
+
+</div>
+</body>
+</html>

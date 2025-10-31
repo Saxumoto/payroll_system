@@ -1,79 +1,65 @@
-def calculate_salary(emp_id, payroll_period=None):
-    import sqlite3
+import datetime
 
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
+def get_current_date():
+    """Returns the current date in YYYY-MM-DD format."""
+    return datetime.date.today().strftime('%Y-%m-%d')
 
-    # Fetch employee record
-    if payroll_period:
-        c.execute('SELECT id, name, position, department, salary FROM employees WHERE id = ? AND payroll_period = ?', (emp_id, payroll_period))
-    else:
-        c.execute('SELECT id, name, position, department, salary FROM employees WHERE id = ?', (emp_id,))
+def calculate_salary(base_salary):
+    """
+    Calculates deductions and net salary from a base salary.
+    All payroll logic is centralized here.
+    """
+    # Ensure salary is a number, default to 0 if None or invalid
+    if base_salary is None:
+        base_salary = 0.0
     
-    emp = c.fetchone()
-    conn.close()
+    try:
+        # Ensure base_salary is a float for calculations
+        base_salary = float(base_salary)
+    except (ValueError, TypeError):
+        base_salary = 0.0
 
-    if not emp:
-        return None
-
-    salary = float(emp['salary'])
-
-    # Statutory deductions (2025 rates)
-    sss = salary * 0.01
-    philhealth = salary * 0.015
-    pagibig = salary * 0.01
-
-    # Placeholder for withholding tax (can be expanded later)
-    withholding_tax = 0
-
-    # Net salary
-    net_salary = salary - (sss + philhealth + pagibig + withholding_tax)
-
+    # ---Deduction Calculations---
+    # These values can be updated here and will apply everywhere.
+    
+    # SSS Contribution (example: 1% of base salary)
+    sss = round(base_salary * 0.01, 2)
+    
+    # PhilHealth Contribution (example: 1.5% of base salary)
+    philhealth = round(base_salary * 0.015, 2)
+    
+    # Pag-IBIG Contribution (example: 1% of base salary)
+    pagibig = round(base_salary * 0.01, 2)
+    
+    # ---Totals---
+    total_deductions = round(sss + philhealth + pagibig, 2)
+    net_salary = round(base_salary - total_deductions, 2)
+    
+    # Return a dictionary with all values
     return {
-        'id': emp['id'],
-        'name': emp['name'],
-        'position': emp['position'],
-        'department': emp['department'],
-        'salary': round(salary, 2),
-        'sss': round(sss, 2),
-        'philhealth': round(philhealth, 2),
-        'pagibig': round(pagibig, 2),
-        'withholding_tax': round(withholding_tax, 2),
-        'net_salary': round(net_salary, 2)
+        'salary': base_salary,
+        'sss': sss,
+        'philhealth': philhealth,
+        'pagibig': pagibig,
+        'total_deductions': total_deductions,
+        'net_salary': net_salary
     }
 
-def process_payroll_period(payroll_period):
-    import sqlite3
+if __name__ == '__main__':
+    # Example usage for testing
+    date = get_current_date()
+    print(f"Current Date: {date}")
+    
+    salary_details = calculate_salary(50000)
+    print("\nSalary Calculation Example (Base: 50000):")
+    print(f"  Base Salary: {salary_details['salary']:.2f}")
+    print(f"  SSS: {salary_details['sss']:.2f}")
+    print(f"  PhilHealth: {salary_details['philhealth']:.2f}")
+    print(f"  Pag-IBIG: {salary_details['pagibig']:.2f}")
+    print(f"  Total Deductions: {salary_details['total_deductions']:.2f}")
+    print(f"  Net Salary: {salary_details['net_salary']:.2f}")
 
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-
-    # Fetch all employees for the selected period
-    c.execute('SELECT * FROM employees WHERE payroll_period = ?', (payroll_period,))
-    employees = c.fetchall()
-    conn.close()
-
-    payroll_data = []
-    for emp in employees:
-        salary = float(emp['salary'])
-        sss = salary * 0.01
-        philhealth = salary * 0.015
-        pagibig = salary * 0.01
-        net_salary = salary - (sss + philhealth + pagibig)
-
-        payroll_data.append({
-            'id': emp['id'],
-            'name': emp['name'],
-            'position': emp['position'],
-            'department': emp['department'],
-            'salary': round(salary, 2),
-            'sss': round(sss, 2),
-            'philhealth': round(philhealth, 2),
-            'pagibig': round(pagibig, 2),
-            'net_salary': round(net_salary, 2),
-            'payroll_period': payroll_period
-        })
-
-    return payroll_data
+    salary_details_none = calculate_salary(None)
+    print("\nSalary Calculation Example (Base: None):")
+    print(f"  Base Salary: {salary_details_none['salary']:.2f}")
+    print(f"  Net Salary: {salary_details_none['net_salary']:.2f}")

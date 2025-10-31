@@ -1,223 +1,242 @@
-# 📦 Core Flask & Extensions
-from flask import (
-    Flask, render_template, request, redirect,
-    make_response, send_file, flash, url_for
-)
-from flask_login import (
-    LoginManager, login_user, login_required,
-    logout_user, current_user
-)
-
-# 🧠 Models & Business Logic
-from models import (
-    init_db, add_employee, get_employees, get_employee_by_id,
-    update_employee, delete_employee, get_user_by_username,
-    User, add_user
-)
-from utils import calculate_salary
-
-# 📄 PDF & File Handling
-import pdfkit
+import os
 import sqlite3
+import uuid
 import csv
 import io
-from io import StringIO
-from werkzeug.security import check_password_hash
+from flask import Flask, render_template, request, redirect, session, flash, url_for, make_response
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from functools import wraps
 
-# 📁 File System & UUID
-import os
-import uuid
-
-# 🖨️ ReportLab for PDF Generation
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.platypus import (
-    SimpleDocTemplate, Table, TableStyle,
-    Paragraph, Spacer
+# Import database functions from models.py
+from models import (
+    init_db,
+    add_employee,
+    get_employees,
+    get_employee_by_id,
+    update_employee,
+    delete_employee,
+    get_user_by_username,
+    create_user
 )
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.pdfgen import canvas
 
-# 🧾 Modular PDF Generator
-from services.pdf_generator import generate_payslip_pdf
+# Import utility functions from utils.py
+from utils import (
+    get_current_date,
+    calculate_salary  # <-- Import the centralized calculator
+)
 
-# 📅 Date Utilities
-from datetime import datetime
+# Import PDF generation service
+from services.pdf_generator import generate_payroll_pdf
 
-# 🚀 Initialize Flask App
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "default-secret-key")
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
+app.config['SECRET_KEY'] = 'your_very_secret_key_goes_here'  # Change this to a random secret key
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
 
-# 📊 Attendance & Leave Integration (coming soon)
-# from services.attendance_importer import import_attendance_csv
-# from services.leave_manager import calculate_leave_deductions
-# 🕒 Inject current year into templates
-@app.context_processor
-def inject_year():
-    return {'current_year': datetime.now().year}
+# Ensure the upload folder exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# 📅 Utility: Get current date as string
-def get_current_date():
-    return datetime.now().strftime('%Y-%m-%d')  # Format: 2025-10-30
-# 🔧 Initialize database
-init_db()
-
-# 🔐 Login setup
+# Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+login_manager.login_message_category = 'info'
 
+# User model for Flask-Login
+class User(UserMixin):
+    def __init__(self, id, username, password_hash, is_admin=0):
+        self.id = id
+        self.username = username
+        self.password_hash = password_hash
+        self.is_admin = is_admin
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
+
+    def get_is_admin(self):
+        return self.is_admin
+
+# User loader function for Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
     conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute('SELECT * FROM users WHERE id = ?', (user_id,))
-    row = c.fetchone()
+    user_row = c.fetchone()
     conn.close()
-    return User(*row) if row else None
+    if user_row:
+        return User(user_row['id'], user_row['username'], user_row['password_hash'], user_row['is_admin'])
+    return None
 
-# 🏠 Landing page
-@app.route('/home')
-def home():
-    return render_template('home.html')
+# Custom decorator for admin-only routes
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.get_is_admin():
+            flash('You do not have permission to access this page.', 'danger')
+            return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
 
-@app.route('/')
-def root():
-    return redirect('/home')
+# --- Authentication Routes ---
 
-# 🔐 Login (admin only)
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = get_user_by_username(username)
-
-        if not user:
-            return "User not found."
-        if user.role != 'admin':
-            return "Access denied. Only admin accounts are allowed."
-        if check_password_hash(user.password, password):
+        user_row = get_user_by_username(username)
+        
+        if user_row and check_password_hash(user_row['password_hash'], password):
+            user = User(user_row['id'], user_row['username'], user_row['password_hash'], user_row['is_admin'])
             login_user(user)
-            return redirect('/dashboard')
-        return "Invalid credentials."
-
+            flash('Logged in successfully.', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Login unsuccessful. Please check username and password.', 'danger')
+            
     return render_template('login.html')
 
-# 📝 Register (admin only)
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        if password != confirm_password:
+            flash('Passwords do not match.', 'danger')
+            return redirect(url_for('register'))
+
+        # Check if user already exists
         if get_user_by_username(username):
-            return "Username already taken."
-        add_user(username, password, role='admin', status='approved')
-        return redirect('/login')
+            flash('Username already exists.', 'danger')
+            return redirect(url_for('register'))
+
+        hashed_password = generate_password_hash(password)
+        
+        # Removed 'email' from the create_user call to match the database
+        create_user(username, hashed_password)
+        
+        flash('Registration successful. Please log in.', 'success')
+        return redirect(url_for('login'))
     return render_template('register.html')
 
-# 🔓 Logout
+# 🔐 Logout
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    return redirect('/login')
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('login'))
 
-# 👥 Employee Management Page
+# --- Core Application Routes ---
+
+@app.route('/')
+def home():
+    return render_template('home.html')
+
 @app.route('/employees')
 @login_required
-def employees():
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-
-    # Fetch employee data
-    c.execute('SELECT id, name, position, salary, payroll_period FROM employees ORDER BY id ASC')
-    employees = c.fetchall()
+def employee_list():
+    # Fetch employee data using the model function
+    employees = get_employees()
 
     # Backend calculations
     total_employees = len(employees)
-    total_salary = sum(float(emp['salary']) for emp in employees)
-    total_sss = sum(float(emp['salary']) * 0.01 for emp in employees)
-    total_philhealth = sum(float(emp['salary']) * 0.015 for emp in employees)
-    total_pagibig = sum(float(emp['salary']) * 0.01 for emp in employees)
-    net_total = total_salary - total_sss - total_philhealth - total_pagibig
+    total_salary = 0
+    total_sss = 0
+    total_philhealth = 0
+    total_pagibig = 0
+    net_total = 0
 
-    conn.close()
+    employee_data_list = []
 
-    return render_template(
-        'employees.html',
-        employees=employees,
-        total_employees=total_employees,
-        total_salary=total_salary,
-        total_sss=total_sss,
-        total_philhealth=total_philhealth,
-        total_pagibig=total_pagibig,
-        net_total=net_total
-    )
-    
-# ➕ Add employee
+    for emp in employees:
+        # Use the centralized calculator
+        calcs = calculate_salary(emp['salary'])
+        
+        # Aggregate totals
+        total_salary += calcs['salary']
+        total_sss += calcs['sss']
+        total_philhealth += calcs['philhealth']
+        total_pagibig += calcs['pagibig']
+        net_total += calcs['net_salary']
+        
+        # Append all data for the template
+        emp_dict = dict(emp)  # Convert sqlite3.Row to dict
+        emp_dict.update(calcs) # Add calculated values
+        employee_data_list.append(emp_dict)
+
+    return render_template('employees.html',
+                           employees=employee_data_list,
+                           total_employees=total_employees,
+                           total_salary=f'{total_salary:,.2f}',
+                           total_sss=f'{total_sss:,.2f}',
+                           total_philhealth=f'{total_philhealth:,.2f}',
+                           total_pagibig=f'{total_pagibig:,.2f}',
+                           net_total=f'{net_total:,.2f}')
+
+# ➕ Add new employee
 @app.route('/add', methods=['GET', 'POST'])
 @login_required
-def add():
+@admin_required  # Only admins can add employees
+def add_employee_route():
     if request.method == 'POST':
         name = request.form['name']
         position = request.form['position']
         department = request.form['department']
-        payroll_period = request.form['payroll_period'].strip().title()  # e.g. "October 2025"
         salary = float(request.form['salary'])
-        date = request.form.get('date') or get_current_date()
-        photo_file = request.files['photo']
+        payroll_period = request.form['payroll_period'].strip().title()
+        date = request.form['date'] or get_current_date()
         hourly_rate = request.form.get('hourly_rate', type=float)
+        
+        photo_filename = None
+        photo_file = request.files.get('photo')
 
-        # Ensure upload folder exists
-        upload_folder = os.path.join('static', 'uploads')
-        os.makedirs(upload_folder, exist_ok=True)
+        if photo_file and photo_file.filename:
+            # Generate a unique filename
+            extension = os.path.splitext(secure_filename(photo_file.filename))[1]
+            photo_filename = str(uuid.uuid4()) + extension
+            photo_path = os.path.join(app.config['UPLOAD_FOLDER'], photo_filename)
+            photo_file.save(photo_path)
 
-        # Save photo with unique filename
-        photo_filename = str(uuid.uuid4()) + os.path.splitext(secure_filename(photo_file.filename))[1]
-        photo_path = os.path.join(upload_folder, photo_filename)
-        photo_file.save(photo_path)
+        # Save to database using the model function
+        add_employee(name, position, department, salary, payroll_period, date, photo_filename, hourly_rate)
 
-        # Save to database
-        conn = sqlite3.connect('database.db')
-        c = conn.cursor()
-        c.execute('''
-            INSERT INTO employees (name, position, department, salary, payroll_period, date, photo, hourly_rate)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (name, position, department, salary, payroll_period, date, photo_filename, hourly_rate))
-        conn.commit()
-        conn.close()
+        flash(f'Employee {name} added successfully!', 'success')
+        return redirect(url_for('dashboard'))
 
-        flash("Employee added successfully.", "success")
-        return redirect('/payroll')
+    return render_template('add_employee.html', current_date=get_current_date())
 
-    return render_template('add_employee.html')
-
- # ✏️ Edit employee
-
-#Edit Employee
+# ✏️ Edit employee
 @app.route('/edit/<int:employee_id>', methods=['GET', 'POST'])
 @login_required
+@admin_required  # Only admins can edit employees
 def edit_employee(employee_id):
-    import os, uuid
-    from werkzeug.utils import secure_filename
-
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-
-    # Fetch employee record
-    c.execute('SELECT * FROM employees WHERE id = ?', (employee_id,))
-    employee = c.fetchone()
+    # Use the model function to get the employee
+    employee = get_employee_by_id(employee_id)
 
     if not employee:
-        conn.close()
         flash("Employee not found.", "danger")
-        return redirect('/dashboard')
+        return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
         name = request.form['name']
@@ -233,79 +252,66 @@ def edit_employee(employee_id):
         photo_filename = employee['photo']  # default to existing
 
         if photo_file and photo_file.filename:
-            upload_folder = os.path.join('static', 'uploads')
-            os.makedirs(upload_folder, exist_ok=True)
-            photo_filename = str(uuid.uuid4()) + os.path.splitext(secure_filename(photo_file.filename))[1]
-            photo_path = os.path.join(upload_folder, photo_filename)
+            # Generate a new unique filename
+            extension = os.path.splitext(secure_filename(photo_file.filename))[1]
+            photo_filename = str(uuid.uuid4()) + extension
+            photo_path = os.path.join(app.config['UPLOAD_FOLDER'], photo_filename)
             photo_file.save(photo_path)
+            
+            # TODO: Delete the old photo if it's different
+            # if employee['photo'] and employee['photo'] != photo_filename:
+            #     old_photo_path = os.path.join(app.config['UPLOAD_FOLDER'], employee['photo'])
+            #     if os.path.exists(old_photo_path):
+            #         os.remove(old_photo_path)
 
-        # Update employee record
-        c.execute('''
-            UPDATE employees
-            SET name = ?, position = ?, department = ?, salary = ?, payroll_period = ?, date = ?, photo = ?, hourly_rate = ?
-            WHERE id = ?
-        ''', (name, position, department, salary, payroll_period, date, photo_filename, hourly_rate, employee_id))
-        conn.commit()
-        conn.close()
+        # Use the model function to update
+        update_employee(
+            employee_id, name, position, department, salary, 
+            payroll_period, date, photo_filename, hourly_rate
+        )
 
         flash("Employee updated successfully.", "success")
-        return redirect('/dashboard')
+        return redirect(url_for('dashboard'))
 
-    conn.close()
     return render_template('edit_employee.html', employee=employee)
 
-# ❌ Delete employee
+
+# 🗑️ Delete employee
 @app.route('/delete/<int:emp_id>', methods=['POST'])
 @login_required
-def delete(emp_id):
-    if current_user.role != 'admin':
-        flash("Access denied. Admins only.", "danger")
-        return redirect('/employees')
+@admin_required  # Only admins can delete employees
+def delete_employee_route(emp_id):
+    try:
+        # Fetch employee record to get photo filename
+        employee = get_employee_by_id(emp_id)
+        
+        if employee and employee['photo']:
+            photo_path = os.path.join(app.config['UPLOAD_FOLDER'], employee['photo'])
+            if os.path.exists(photo_path):
+                os.remove(photo_path)  # Delete the photo file
 
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
+        # Use model function to delete from database
+        delete_employee(emp_id)
+        
+        flash('Employee deleted successfully.', 'success')
+    except Exception as e:
+        flash(f'Error deleting employee: {e}', 'danger')
+        
+    return redirect(url_for('dashboard'))
 
-    # Fetch photo filename
-    c.execute('SELECT photo FROM employees WHERE id = ?', (emp_id,))
-    row = c.fetchone()
-    if row and row['photo']:
-        photo_path = os.path.join('static', 'uploads', row['photo'])
-        if os.path.exists(photo_path):
-            os.remove(photo_path)
-
-    # Delete employee record
-    c.execute('DELETE FROM employees WHERE id = ?', (emp_id,))
-    conn.commit()
-    conn.close()
-
-    flash("Employee deleted successfully.", "info")
-    return redirect('/employees')
-
-# 📄 View payslip
-# 📄 Individual Payslip View
+# 🧾 View single employee payroll
 @app.route('/payroll/<int:emp_id>')
 @login_required
-def view_payslip(emp_id):
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-
+def view_payroll(emp_id):
     # Fetch employee record
-    c.execute('SELECT * FROM employees WHERE id = ?', (emp_id,))
-    employee = c.fetchone()
-    conn.close()
+    employee = get_employee_by_id(emp_id)
 
     if not employee:
         flash("Employee not found.", "danger")
-        return redirect('/payroll')
-
-    # Calculate deductions
-    salary = float(employee['salary'])
-    sss = round(salary * 0.01, 2)
-    philhealth = round(salary * 0.015, 2)
-    pagibig = round(salary * 0.01, 2)
-    net_salary = salary - sss - philhealth - pagibig
+        return redirect(url_for('dashboard'))
+    
+    # Calculate deductions using the centralized calculator
+    calcs = calculate_salary(employee['salary'])
 
     # Prepare details dictionary
     salary_details = {
@@ -315,296 +321,182 @@ def view_payslip(emp_id):
         'department': employee['department'],
         'payroll_period': employee['payroll_period'],
         'date': employee['date'] or get_current_date(), 
-        'date': employee['date'],
-        'salary': salary,
-        'sss': sss,
-        'philhealth': philhealth,
-        'pagibig': pagibig,
-        'net_salary': net_salary,
-        'photo': employee['photo']
+        'photo': employee['photo'],
+        **calcs  # Unpacks salary, sss, philhealth, pagibig, total_deductions, net_salary
     }
 
-    return render_template('payroll.html', details=salary_details)
+    return render_template('payroll.html', employee=salary_details)
 
-# 📄 Payroll Dashboard with Filtering
-@app.route('/payroll', methods=['GET', 'POST'])
+# 📄 Download PDF payslip
+@app.route('/download/payroll/<int:emp_id>')
 @login_required
-def payroll_dashboard():
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
+def download_payroll_pdf(emp_id):
+    employee = get_employee_by_id(emp_id)
+    if not employee:
+        flash("Employee not found.", "danger")
+        return redirect(url_for('dashboard'))
 
-    # Get distinct payroll periods (normalized)
-    c.execute('SELECT DISTINCT payroll_period FROM employees ORDER BY payroll_period DESC')
-    periods = [row['payroll_period'].title() for row in c.fetchall()]
+    # Use centralized calculator
+    calcs = calculate_salary(employee['salary'])
+    
+    salary_details = {
+        'id': employee['id'],
+        'name': employee['name'],
+        'position': employee['position'],
+        'department': employee['department'],
+        'payroll_period': employee['payroll_period'],
+        'date': employee['date'] or get_current_date(),
+        **calcs
+    }
 
-    # Get selected period from form
-    selected_period = request.args.get('payroll_period')
-
-    if selected_period:
-        c.execute('SELECT * FROM employees WHERE payroll_period = ?', (selected_period,))
+    # Render HTML template for the PDF content
+    pdf_html = render_template('payroll_pdf.html', employee=salary_details)
+    
+    # Generate PDF from HTML
+    pdf_file = generate_payroll_pdf(pdf_html)
+    
+    if pdf_file:
+        response = make_response(pdf_file)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=payroll_{employee["name"]}.pdf'
+        return response
     else:
-        c.execute('SELECT * FROM employees ORDER BY payroll_period DESC')
+        flash('Error generating PDF.', 'danger')
+        return redirect(url_for('view_payroll', emp_id=emp_id))
 
-    employees = c.fetchall()
-    conn.close()
 
-    return render_template('payroll_dashboard.html', employees=employees, periods=periods, selected_period=selected_period)
-
-# 📤 Export payroll to CSV
-@app.route('/dashboard/export', methods=['POST'])
+# 📊 Export payroll data to CSV
+@app.route('/dashboard/export', methods=['GET'])
 @login_required
-def export_csv():
-    if current_user.role != 'admin':
-        return "Access denied."
-
-    selected_period = request.form.get('period')
-    if not selected_period:
-        return "No payroll period selected."
-
+def export_payroll_csv():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    c.execute('SELECT id, name, position, salary FROM employees WHERE payroll_period = ?', (selected_period,))
+    
+    # Fetch only necessary data for the report
+    c.execute('SELECT id, name, position, salary FROM employees')
     rows = c.fetchall()
     conn.close()
 
-    output = StringIO()
+    # Create CSV in-memory
+    output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['ID', 'Name', 'Position', 'Salary', 'SSS', 'PhilHealth', 'Pag-IBIG', 'Net Salary'])
-
+    
+    # Write Header
+    writer.writerow(['ID', 'Name', 'Position', 'Salary', 'SSS', 'PhilHealth', 'Pag-IBIG', 'Net Pay'])
+    
+    # Write Data Rows
     for emp_id, name, position, salary in rows:
-        salary = salary or 0
-        sss = salary * 0.01
-        philhealth = salary * 0.015
-        pagibig = salary * 0.01
-        net_salary = salary - (sss + philhealth + pagibig)
+        # Use the centralized calculator
+        calcs = calculate_salary(salary)
         writer.writerow([
             emp_id,
             name,
             position,
-            f"{salary:.2f}",
-            f"{sss:.2f}",
-            f"{philhealth:.2f}",
-            f"{pagibig:.2f}",
-            f"{net_salary:.2f}"
+            f"{calcs['salary']:.2f}",
+            f"{calcs['sss']:.2f}",
+            f"{calcs['philhealth']:.2f}",
+            f"{calcs['pagibig']:.2f}",
+            f"{calcs['net_salary']:.2f}"
         ])
 
-    safe_period = selected_period.replace(" ", "_").replace("/", "-")
-    filename = f"payroll_{safe_period}.csv"
-
+    output.seek(0)
+    
     response = make_response(output.getvalue())
-    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
     response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = 'attachment; filename=payroll_export.csv'
     return response
 
-# 📄 View employee details
-@app.route('/employee/<int:employee_id>')
+
+# --- Admin Routes ---
+
+@app.route('/admin/approvals')
 @login_required
-def view_employee(employee_id):
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row  # Enables dict-style access
-    c = conn.cursor()
-    c.execute('SELECT * FROM employees WHERE id = ?', (employee_id,))
-    employee = c.fetchone()
-    conn.close()
+@admin_required
+def admin_approvals():
+    # This is a placeholder. Implement approval logic if needed.
+    return render_template('admin_approvals.html')
 
-    if not employee:
-        return "Employee not found."
+# --- Main Dashboard Route ---
 
-    return render_template('view_employee.html', employee=employee)
-
-# 📊 Admin Dashboard with Employee Management
-@app.route('/dashboard', methods=['GET'])
+# 📊 Dashboard View (This is the primary dashboard)
+@app.route('/dashboard')
 @login_required
 def dashboard():
     conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
+    conn.row_factory = sqlite3.Row  # Ensure we can access columns by name
     c = conn.cursor()
 
-    # Get available payroll periods
-    c.execute('SELECT DISTINCT payroll_period FROM employees WHERE payroll_period IS NOT NULL ORDER BY payroll_period DESC')
-    periods = [row[0] for row in c.fetchall()]
+    # Fetch all employees
+    c.execute('SELECT * FROM employees ORDER BY name')
+    employee_rows = c.fetchall()
+    
+    # Convert rows to a list of dictionaries
+    employees = [dict(row) for row in employee_rows]
 
-    # Get available departments
-    c.execute('SELECT DISTINCT department FROM employees WHERE department IS NOT NULL ORDER BY department')
-    departments = [row[0] for row in c.fetchall()]
-
-    # Get selected filters from query string
-    selected_period = request.args.get('period') or (periods[0] if periods else None)
-    selected_department = request.args.get('department_filter') or ''
-
-    # Build query with filters
-    query = 'SELECT id, name, position, department, salary, payroll_period FROM employees WHERE 1=1'
-    params = []
-
-    if selected_period:
-        query += ' AND payroll_period = ?'
-        params.append(selected_period)
-
-    if selected_department:
-        query += ' AND department = ?'
-        params.append(selected_department)
-
-    c.execute(query, params)
-    employees = [dict(row) for row in c.fetchall()]
-
-    # Initialize totals
+    # Calculate totals
     total_employees = len(employees)
-    total_salary = sum(emp['salary'] or 0 for emp in employees)
+    total_salary = sum(emp['salary'] for emp in employees if emp['salary'])
+    
+    # Initialize aggregated deductions
     total_sss = 0
     total_philhealth = 0
     total_pagibig = 0
     net_total = 0
 
-    # Calculate deductions and net pay
+    # Calculate deductions and net pay for each employee
     for emp in employees:
-        salary = emp['salary'] or 0
-        sss = salary * 0.01
-        philhealth = salary * 0.015
-        pagibig = salary * 0.01
-        net_salary = salary - (sss + philhealth + pagibig)
+        # Use the centralized calculator
+        calcs = calculate_salary(emp['salary'])
+        
+        # Add all calculated values to the emp dict
+        emp.update(calcs) 
 
-        emp['net_salary'] = net_salary
-        emp['sss'] = sss
-        emp['philhealth'] = philhealth
-        emp['pagibig'] = pagibig
+        # Aggregate totals
+        total_sss += calcs['sss']
+        total_philhealth += calcs['philhealth']
+        total_pagibig += calcs['pagibig']
+        net_total += calcs['net_salary']
 
-        total_sss += sss
-        total_philhealth += philhealth
-        total_pagibig += pagibig
-        net_total += net_salary
+    # Fetch department breakdown
+    c.execute('''
+        SELECT department, COUNT(id) as count
+        FROM employees
+        GROUP BY department
+    ''')
+    department_data = c.fetchall()
+
+    # Fetch position breakdown
+    c.execute('''
+        SELECT position, COUNT(id) as count
+        FROM employees
+        GROUP BY position
+    ''')
+    position_data = c.fetchall()
 
     conn.close()
+
+    # Format data for charts
+    department_labels = [row['department'] for row in department_data]
+    department_counts = [row['count'] for row in department_data]
+    
+    position_labels = [row['position'] for row in position_data]
+    position_counts = [row['count'] for row in position_data]
 
     return render_template('dashboard.html',
-        total_employees=total_employees,
-        total_payroll=total_salary,
-        total_deduction=total_sss + total_philhealth + total_pagibig,
-        net_pay=net_total,
-        total_contribution=total_philhealth + total_pagibig,
-        total_loan=0,  # Update if you track loans
-        employees=employees,
-        periods=periods,
-        departments=departments,
-        selected_period=selected_period,
-        selected_department=selected_department
-    )# 📊 Employee Breakdown View
-@app.route('/dashboard')
-@login_required
-def employee_dashboard():
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
+                           employees=employees,
+                           total_employees=total_employees,
+                           total_salary=f'{total_salary:,.2f}',
+                           total_sss=f'{total_sss:,.2f}',
+                           total_philhealth=f'{total_philhealth:,.2f}',
+                           total_pagibig=f'{total_pagibig:,.2f}',
+                           net_total=f'{net_total:,.2f}',
+                           department_labels=department_labels,
+                           department_counts=department_counts,
+                           position_labels=position_labels,
+                           position_counts=position_counts)
 
-    # Fetch employee breakdown data
-    c.execute('''
-        SELECT id, name, position, department, salary, payroll_period
-        FROM employees
-        ORDER BY payroll_period DESC
-    ''')
-    employees = c.fetchall()
 
-    conn.close()
-    return render_template('dashboard.html', employees=employees)
-
-# 📄 Download Payslip as PDF
-@app.route('/payroll/<int:emp_id>/pdf')
-@login_required
-def download_payslip_pdf(emp_id):
-    # 📦 Fetch employee data
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-    c.execute('SELECT * FROM employees WHERE id = ?', (emp_id,))
-    emp = c.fetchone()
-    conn.close()
-
-    if not emp:
-        flash("Employee not found.", "danger")
-        return redirect('/payroll')
-
-    # 🖨️ Generate PDF using the service
-    try:
-        buffer = generate_payslip_pdf(emp)
-        return send_file(
-            buffer, 
-            as_attachment=True, 
-            download_name=f"payslip_{emp['name'].replace(' ', '_')}_{emp['payroll_period']}.pdf", 
-            mimetype='application/pdf'
-        )
-    except Exception as e:
-        flash(f"Error generating PDF: {e}", "danger")
-        return redirect(url_for('view_payslip', emp_id=emp_id))
-    
-# 📄 Bulk Payslip Generation for Payroll Period
-@app.route('/payroll/payslips/<period>')
-@login_required
-def generate_bulk_payslips(period):
-    import zipfile
-    import os
-    from datetime import datetime
-
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-    c.execute('SELECT * FROM employees WHERE payroll_period = ?', (period,))
-    employees = c.fetchall()
-    conn.close()
-
-    if not employees:
-        flash("No employees found for this payroll period.", "warning")
-        return redirect('/payroll')
-
-    # Create a temporary ZIP archive
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for emp in employees:
-            emp_id = emp['id']
-            name = emp['name']
-            filename = f"{name.replace(' ', '_')}_payslip.pdf"
-
-            # Generate individual PDF
-            pdf_buffer = generate_payslip_pdf(emp)  # You’ll define this next
-            zipf.writestr(filename, pdf_buffer.getvalue())
-
-    zip_buffer.seek(0)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
-    return send_file(zip_buffer, as_attachment=True, download_name=f"payslips_{period}_{timestamp}.zip", mimetype='application/zip')
-
-# 📤 Upload Attendance CSV
-@app.route('/upload-attendance', methods=['POST'])
-@login_required
-def upload_attendance():
-    file = request.files.get('attendance_file')
-    if not file or not file.filename.endswith('.csv'):
-        flash("Please upload a valid CSV file.", "danger")
-        return redirect(url_for('dashboard'))
-
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-
-    stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
-    reader = csv.DictReader(stream)
-
-    for row in reader:
-        try:
-            c.execute('''
-                INSERT INTO attendance (employee_id, date, clock_in, clock_out, total_hours)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (
-                int(row['employee_id']),
-                row['date'],
-                row['clock_in'],
-                row['clock_out'],
-                float(row['total_hours'])
-            ))
-        except Exception as e:
-            print("Error importing row:", row, e)
-
-    conn.commit()
-    conn.close()
-    flash("Attendance data imported successfully.", "success")
-    return redirect(url_for('dashboard'))
-
+# --- Initialization ---
 if __name__ == '__main__':
+    init_db()  # Ensure tables are created before running
     app.run(debug=True)
-

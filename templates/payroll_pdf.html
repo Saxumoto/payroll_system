@@ -1,71 +1,185 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Payslip</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            margin: 40px;
-            color: #333;
-        }
-        h2 {
-            color: #0d6efd;
-            border-bottom: 2px solid #0d6efd;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-        }
-        .section {
-            margin-bottom: 20px;
-        }
-        .label {
-            font-weight: bold;
-            width: 180px;
-            display: inline-block;
-        }
-        .value {
-            display: inline-block;
-        }
-        .net {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #198754;
-        }
-        .footer {
-            margin-top: 40px;
-            font-size: 0.9em;
-            color: #666;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Payslip - {{ employee.name }}</title>
+<style>
+body {
+font-family: Arial, sans-serif;
+margin: 40px;
+font-size: 14px;
+color: #333;
+}
+.header {
+text-align: center;
+margin-bottom: 20px;
+}
+.header h1 {
+margin: 0;
+font-size: 24px;
+color: #0d6efd; /* Blue from your theme /
+}
+.header p {
+font-size: 16px;
+margin: 5px 0;
+}
+.payslip-table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 20px;
+}
+.payslip-table th, .payslip-table td {
+border: 1px solid #ddd;
+padding: 12px;
+text-align: left;
+}
+.payslip-table th {
+background-color: #f2f2f2;
+}
+.info-table {
+width: 100%;
+margin-bottom: 30px;
+}
+.info-table td {
+padding: 5px;
+width: 50%;
+}
+.info-table strong {
+display: inline-block;
+width: 150px;
+}
+.summary-section {
+width: 100%;
+margin-top: 30px;
+}
+.summary-table {
+width: 50%;
+float: right;
+border-collapse: collapse;
+}
+.summary-table td {
+padding: 10px;
+border: 1px solid #ddd;
+}
+.summary-table .total {
+font-weight: bold;
+font-size: 18px;
+background-color: #f2f2f2;
+}
+.summary-table .total td {
+color: #0d6efd; / Blue from your theme /
+}
+.amount {
+text-align: right;
+}
+.negative {
+color: #dc3545; / Red from your theme */
+}
+.positive {
+color: #079c4d;
+}
+.footer {
+margin-top: 40px;
+padding-top: 20px;
+border-top: 1px solid #ddd;
+text-align: center;
+font-size: 12px;
+color: #777;
+}
+</style>
 </head>
 <body>
-    <h2>Payslip</h2>
 
-    {% if details %}
-    <div class="section">
-        <div><span class="label">Employee Name:</span> <span class="value">{{ details.name }}</span></div>
-        <div><span class="label">Position:</span> <span class="value">{{ details.position }}</span></div>
-    </div>
-    <div class="section">
-    <div><span class="label">Base Salary:</span> ₱{{ "{:,.2f}".format(details.salary|default(0)) }}</div>
-    <div><span class="label">SSS Deduction:</span> ₱{{ "{:,.2f}".format(details.sss|default(0)) }}</div>
-    <div><span class="label">PhilHealth Deduction:</span> ₱{{ "{:,.2f}".format(details.philhealth|default(0)) }}</div>
-    <div><span class="label">Pag-IBIG Deduction:</span> ₱{{ "{:,.2f}".format(details.pagibig|default(0)) }}</div>
+<div class="header">
+    <h1>PAYSLIP</h1>
+    <p>Payroll Management System</p>
+    <p>The Visa Center (DIZON IMMIGRATION SERVICES)</p>
 </div>
 
-<div class="section net">
-    <div><span class="label">Net Salary:</span> ₱{{ "{:,.2f}".format(details.net_salary|default(0)) }}</div>
+<h3>Employee Information</h3>
+<table class="info-table">
+    <tr>
+        <td><strong>Employee Name:</strong></td>
+        <td>{{ employee.name }}</td>
+    </tr>
+    <tr>
+        <td><strong>Position:</strong></td>
+        <td>{{ employee.position }}</td>
+    </tr>
+    <tr>
+        <td><strong>Department:</strong></td>
+        <td>{{ employee.department }}</td>
+    </tr>
+    <tr>
+        <td><strong>Pay Period:</strong></td>
+        <td>{{ employee.payroll_period }}</td>
+    </tr>
+    <tr>
+        <td><strong>Pay Date:</strong></td>
+        <td>{{ employee.date or 'N/A' }}</td>
+    </tr>
+</table>
+
+<h3>Payroll Details</h3>
+<table class="payslip-table">
+    <thead>
+        <tr>
+            <th>Description</th>
+            <th class="amount">Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Earnings -->
+        <tr>
+            <td><strong>Earnings</strong></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td style="padding-left: 30px;">Base Salary</td>
+            <td class="amount positive">₱{{ "%.2f"|format(employee.salary) }}</td>
+        </tr>
+        <!-- Deductions -->
+        <tr>
+            <td><strong>Deductions</strong></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td style="padding-left: 30px;">SSS Contribution</td>
+            <td class="amount negative">(₱{{ "%.2f"|format(employee.sss) }})</td>
+        </tr>
+        <tr>
+            <td style="padding-left: 30px;">PhilHealth Contribution</td>
+            <td class="amount negative">(₱{{ "%.2f"|format(employee.philhealth) }})</td>
+        </tr>
+        <tr>
+            <td style="padding-left: 30px;">Pag-IBIG Contribution</td>
+            <td class="amount negative">(₱{{ "%.2f"|format(employee.pagibig) }})</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="summary-section">
+    <table class="summary-table">
+        <tr>
+            <td>Gross Earnings</td>
+            <td class="amount">₱{{ "%.2f"|format(employee.salary) }}</td>
+        </tr>
+        <tr>
+            <td>Total Deductions</td>
+            <td class="amount">(₱{{ "%.2f"|format(employee.total_deductions) }})</td>
+        </tr>
+        <tr class="total">
+            <td>NET PAY</td>
+            <td class="amount">₱{{ "%.2f"|format(employee.net_salary) }}</td>
+        </tr>
+    </table>
 </div>
 
-    <div class="section net">
-        <div><span class="label">Net Salary:</span> ₱{{ "{:,.2f}".format(details.net_salary) }}</div>
-    </div>
+<div class="footer">
+    <p>This is a system-generated payslip and does not require a signature.</p>
+</div>
 
-    <div class="footer">
-        This payslip is system-generated and does not require a signature.
-    </div>
-    {% else %}
-    <p>Employee not found.</p>
-    {% endif %}
+
 </body>
 </html>

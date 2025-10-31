@@ -1,12 +1,71 @@
-{% extends 'base.html' %}
-{% block title %}Welcome{% endblock %}
-{% block content %}
-<div class="text-center mt-5">
-    <h2 class="mb-4">Welcome to the Payroll Management System</h2>
-    <p class="lead">This portal is for authorized administrators only.</p>
-    <div class="d-grid gap-3 col-6 mx-auto mt-4">
-        <a href="/login" class="btn btn-primary btn-lg">Admin Login</a>
-        <a href="/register" class="btn btn-success btn-lg">Create Admin Account</a>
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome to Payroll Management</title>
+<!-- Link to the auth_style.css file -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth_style.css') }}">
+<!-- Link to Bootstrap Icons -->
+<link rel="stylesheet" href="https://www.google.com/search?q=https://cdn.jsdelivr.net/npm/bootstrap-icons%401.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+<div class="home-container">
+    
+    <div class="home-logo">
+        <img src="{{ url_for('static', filename='img/raw.png') }}" alt="Logo">
     </div>
+
+    <h1>PAYROLL MANAGEMENT SYSTEM</h1>
+    <h2>The Visa Center (DIZON IMMIGRATION SERVICES)</h2>
+    <p class="sub-headline">
+        Streamline your payroll operations with our comprehensive system.
+        Manage employees, process payments, and generate reports all in one place.
+    </p>
+
+    <div class="home-buttons">
+        <!-- This "Get Started" button can link to register -->
+        <a href="{{ url_for('register') }}" class="btn btn-primary">Get Started</a>
+        <a href="{{ url_for('login') }}" class="btn btn-secondary">Sign In</a>
+    </div>
+
+    <!-- Feature cards from the design -->
+    <div class="feature-cards">
+        <div class="feature-card">
+            <i class="bi bi-people-fill"></i>
+            <h3>Employee Management</h3>
+            <p>Easily manage employee information, roles, and status.</p>
+        </div>
+        <div class="feature-card">
+            <i class="bi bi-person-workspace"></i>
+            <h3>Payroll Processing</h3>
+            <p>Streamlined payroll calculation and processing system.</p>
+        </div>
+        <div class="feature-card">
+            <i class="bi bi-bar-chart-line-fill"></i>
+            <h3>Reports & Analytics</h3>
+            <p>Generate comprehensive payroll and employee reports.</p>
+        </div>
+        <div class="feature-card">
+            <i class="bi bi-shield-lock-fill"></i>
+            <h3>Secure System</h3>
+            <p>Enterprise-grade security for your sensitive data.</p>
+        </div>
+    </div>
+
+    <!-- Footer Call-to-Action -->
+    <div classm="home-footer-cta">
+        <h3>Ready to Transform Your Payroll Management?</h3>
+        <p>Join thousands of businesses that trust our platform for their payroll needs.</p>
+        <div class="home-buttons">
+             <a href="{{ url_for('register') }}" class="btn btn-primary">Start Now</a>
+        </div>
+    </div>
+
 </div>
-{% endblock %}
+
+
+</body>
+</html>

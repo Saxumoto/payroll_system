@@ -1,211 +1,312 @@
+/*
+ * =========================================
+ * Main Dashboard Stylesheet
+ * * Based on blue/red gradient design
+ * =========================================
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* Gradient background */
-body {
-  background: linear-gradient(to right, #0d6efd, #dc3545);
-  min-height: 100vh;
-  font-family: 'Segoe UI', sans-serif;
-  color: #fff;
+/* --- Global & Typography --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
-/* Main container */
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #6e8efb, #a777e3, #e36bae);
+    background-size: 200% 200%;
+    animation: gradientBG 15s ease infinite;
+    min-height: 100vh;
+    color: #333;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* --- Layout --- */
 .container {
-  margin-top: 40px;
-  color: #333;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
 }
 
-/* Header */
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+/* --- Navbar --- */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
 }
 
-.dashboard-header h3 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #0d6efd;
+.navbar h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
 }
 
-.dashboard-header .status {
-  font-weight: 600;
-  color: #28a745;
+.btn {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
 }
 
-/* Summary cards */
-.summary-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-bottom: 30px;
+.btn-outline {
+    background: transparent;
+    border: 2px solid #ffffff;
+    color: #ffffff;
+}
+.btn-outline:hover {
+    background: #ffffff;
+    color: #6e8efb;
 }
 
-.summary-card {
-  flex: 1;
-  min-width: 200px;
-  background-color: #f8f9fa;
-  border-radius: 10px;
-  padding: 20px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+/* --- Dashboard Grid --- */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
-.summary-card h6 {
-  font-size: 0.9rem;
-  color: #6c757d;
+.stat-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
-.summary-card h2 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #0d6efd;
+.stat-card-icon {
+    font-size: 2.5rem;
+    padding: 0.5rem;
+}
+.stat-card-info h3 {
+    font-size: 0.9rem;
+    color: #777;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+.stat-card-info span {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #333;
 }
 
-/* Quick Actions */
-.quick-actions {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 30px;
+/* Icon colors from image */
+.text-blue { color: #007bff; }
+.text-red { color: #dc3545; }
+.text-lblue { color: #17a2b8; }
+.text-grey { color: #6c757d; }
+
+
+.dashboard-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
 }
 
-.quick-actions .btn {
-  flex: 1;
-  padding: 12px;
-  font-weight: 600;
-  border-radius: 8px;
-  color: #fff;
-  background: linear-gradient(to right, #0d6efd, #6610f2);
-  border: none;
-  transition: transform 0.2s ease;
+@media (max-width: 992px) {
+    .dashboard-columns {
+        grid-template-columns: 1fr;
+    }
 }
 
-.quick-actions .btn:hover {
-  transform: scale(1.05);
+/* --- Cards (for main content) --- */
+.card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
+    min-height: 300px; /* Ensure cards have some height */
 }
 
-/* Employee table */
+.card-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.card-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #007bff; /* Blue title */
+    margin: 0;
+}
+
+/* --- Buttons (Dashboard Actions) --- */
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    height: 100%;
+}
+
+.btn-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+}
+.btn-action i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.btn-blue {
+    background-color: #007bff;
+    color: #ffffff;
+}
+.btn-blue:hover {
+    background-color: #0069d9;
+}
+
+.btn-red {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+.btn-red:hover {
+    background-color: #c82333;
+}
+
+/* --- Employee List (in card) --- */
+.employee-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.employee-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid #eee;
+}
+.employee-list-item:last-child {
+    border-bottom: none;
+}
+.employee-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.employee-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.employee-info span {
+    font-weight: 500;
+    color: #333;
+}
+.employee-position {
+    font-size: 0.9rem;
+    color: #777;
+}
+
+/* --- Flash Messages --- */
+.flash-messages {
+    width: 100%;
+    margin-bottom: 1.5rem;
+    list-style: none;
+    padding: 0;
+}
+.flash-messages li {
+    padding: 1rem;
+    border-radius: 12px;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+.flash-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.flash-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* --- Table Styles (for employee_list.html) --- */
+.table-wrapper {
+    overflow-x: auto;
+}
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+.table th,
+.table td {
+    padding: 1rem;
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid #eee;
+}
 .table thead {
-  background-color: #0d6efd;
-  color: #fff;
+    background-color: #f4f7f6;
+}
+.table thead th {
+    color: #333;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+.table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+.table .actions {
+    display: flex;
+    gap: 0.5rem;
+}
+.table .actions form {
+    display: inline-block;
+}
+.table-profile img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    object-fit: cover;
+}
+.btn-sm {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+}
+.btn-warning {
+    background-color: #ffc107;
+    color: #333;
+}
+.btn-info {
+    background-color: #17a2b8;
+    color: #fff;
+}
+.btn-danger {
+    background-color: #dc3545;
+    color: #fff;
 }
 
-.table td, .table th {
-  vertical-align: middle;
-  text-align: center;
-}
-
-/* "+" floating button */
-.floating-add {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  background-color: #dc3545;
-  color: white;
-  font-size: 24px;
-  border: none;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.floating-add:hover {
-  background-color: #c82333;
-}
-
-/* LOGIN/REGISTER */
-.auth-wrapper {
-  min-height: 50vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.auth-card {
-  background-color: #fff;
-  border-radius: 12px;
-  padding: 4rem;
-  max-width: 400px;
-  width: 100%;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  text-align: center;
-}
-
-.auth-card img {
-  height: 80px;
-  margin-bottom: 1rem;
-}
-
-.auth-card h2 {
-  font-weight: 700;
-  color: #0d6efd;
-  margin-bottom: 0.5rem;
-}
-
-.auth-card p {
-  color: #6c757d;
-  margin-bottom: 1.5rem;
-}
-
-.auth-card .form-control {
-  border-radius: 8px;
-}
-
-.auth-card .btn-primary {
-  background: linear-gradient(to right, #dc3545, #0d6efd);
-  border: none;
-  font-weight: 600;
-  border-radius: 8px;
-}
-
-.auth-card .btn-primary:hover {
-  opacity: 0.9;
-}
-
-.auth-card .link {
-  display: block;
-  margin-top: 1rem;
-  color: #0d6efd;
-  text-decoration: none;
-}
-
-/* MAIN DASHBOARD */
-
-body {
-  background: linear-gradient(to right, #0d6efd, #dc3545);
-  font-family: 'Segoe UI', sans-serif;
-  min-height: 100vh;
-}
-
-.dashboard-wrapper {
-  color: #fff;
-}
-
-.summary-card {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.summary-card h6 {
-  font-size: 0.9rem;
-  color: #6c757d;
-}
-
-.summary-card h2 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #0d6efd;
-}
-
-.table-primary {
-  background-color: #0d6efd;
-  color: #fff;
-}
-
-.table td, .table th {
-  vertical-align: middle;
-  text-align: center;
-}

@@ -1,40 +1,81 @@
 {% extends 'base.html' %}
-{% block title %}Payslip{% endblock %}
+
+{% block title %}View Payroll - Payroll System{% endblock %}
+{% block page_title %}Employee Payslip{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
-    <h2 class="mb-4 text-center">Payslip</h2>
 
-    {% if details %}
-    <div class="card p-4 shadow-sm mx-auto" style="max-width: 600px;">
-        
-        {% if details.photo %}
-        <div class="text-center mb-3">
-            <img src="{{ url_for('static', filename='uploads/' ~ details.photo) }}" class="img-thumbnail rounded-circle" style="max-width: 120px;">
+<div class="card payslip-card">
+<!-- Payslip Header -->
+<div class="payslip-header">
+<div class="payslip-header-info">
+<img src="{{ url_for('static', filename='uploads/' + (employee.photo if employee.photo else 'default.png')) }}"
+alt="{{ employee.name }}"
+class="payslip-photo"
+onerror="this.src='{{ url_for('static', filename='uploads/default.png') }}';">
+<div>
+<h2>{{ employee.name }}</h2>
+<p>{{ employee.position }}</p>
+<p>{{ employee.department }}</p>
+</div>
+</div>
+<div class="payslip-header-actions">
+<a href="{{ url_for('download_payroll_pdf', emp_id=employee.id) }}" class="btn btn-action btn-blue">
+<i class="bi bi-download me-1"></i> Download PDF
+</a>
+</div>
+</div>
+
+<!-- Payslip Details -->
+<div class="payslip-details-grid">
+    <div class="payslip-group">
+        <h3>Earnings</h3>
+        <div class="payslip-item">
+            <span>Base Salary</span>
+            <span class="amount positive">₱{{ "%.2f"|format(employee.salary) }}</span>
         </div>
-        {% endif %}
-
-        <table class="table table-borderless">
-            <tr><th>Name:</th><td>{{ details.name or 'N/A' }}</td></tr>
-            <tr><th>Position:</th><td>{{ details.position or 'N/A' }}</td></tr>
-            <tr><th>Department:</th><td>{{ details.department or '—' }}</td></tr>
-            <tr><th>Payroll Period:</th><td>{{ details.payroll_period or '—' }}</td></tr>
-            <tr><th>Date Issued:</th><td>{{ details.date or '—' }}</td></tr>
-            <tr><th>Base Salary:</th><td>₱{{ "{:,.2f}".format(details.salary|default(0)) }}</td></tr>
-            <tr><th>SSS Deduction:</th><td>₱{{ "{:,.2f}".format(details.sss|default(0)) }}</td></tr>
-            <tr><th>PhilHealth Deduction:</th><td>₱{{ "{:,.2f}".format(details.philhealth|default(0)) }}</td></tr>
-            <tr><th>Pag-IBIG Deduction:</th><td>₱{{ "{:,.2f}".format(details.pagibig|default(0)) }}</td></tr>
-            <tr class="table-light">
-                <th>Net Salary:</th>
-                <td><strong>₱{{ "{:,.2f}".format(details.net_salary|default(0)) }}</strong></td>
-            </tr>
-        </table>
-
-        <a href="/payroll/{{ details.id }}/pdf" class="btn btn-info w-100 mt-3">📥 Download PDF</a>
-        <button onclick="window.print()" class="btn btn-outline-secondary w-100 mt-2">🖨️ Print Payslip</button>
+        <!-- Add other earnings here if any (e.g., bonuses, overtime) -->
     </div>
 
-    {% else %}
-    <div class="alert alert-danger text-center">Employee not found.</div>
-    {% endif %}
+    <div class="payslip-group">
+        <h3>Deductions</h3>
+        <div class="payslip-item">
+            <span>SSS Contribution</span>
+            <span class="amount negative">(₱{{ "%.2f"|format(employee.sss) }})</span>
+        </div>
+        <div class="payslip-item">
+            <span>PhilHealth Contribution</span>
+            <span class="amount negative">(₱{{ "%.2f"|format(employee.philhealth) }})</span>
+        </div>
+        <div class="payslip-item">
+            <span>Pag-IBIG Contribution</span>
+            <span class="amount negative">(₱{{ "%.2f"|format(employee.pagibig) }})</span>
+        </div>
+    </div>
+</div>
+
+<!-- Payslip Summary -->
+<div class="payslip-summary">
+    <div class="summary-item">
+        <span>Gross Earnings</span>
+        <strong>₱{{ "%.2f"|format(employee.salary) }}</strong>
+    </div>
+    <div class="summary-item">
+        <span>Total Deductions</span>
+        <strong>₱{{ "%.2f"|format(employee.total_deductions) }}</strong>
+    </div>
+    <div class="summary-item total">
+        <span>Net Pay</span>
+        <strong class="net-pay-total">₱{{ "%.2f"|format(employee.net_salary) }}</strong>
+    </div>
+</div>
+
+<!-- Payslip Footer -->
+<div class="payslip-footer">
+    <p><strong>Payroll Period:</strong> {{ employee.payroll_period }}</p>
+    <p><strong>Pay Date:</strong> {{ employee.date or 'N/A' }}</p>
+</div>
+
+
 </div>
 {% endblock %}

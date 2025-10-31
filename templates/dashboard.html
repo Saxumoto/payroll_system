@@ -1,105 +1,119 @@
 {% extends 'base.html' %}
-{% block title %}Payroll Dashboard{% endblock %}
+
+{% block title %}Dashboard - Payroll System{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="dashboard-wrapper container py-4">
 
-  <!-- Header with Filters and Add Button -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="text-white">Payroll Dashboard</h3>
-    <div class="d-flex align-items-center">
-      <form method="GET" class="d-flex align-items-center me-3">
-        <label for="period" class="text-white me-2">Payroll Period:</label>
-        <select name="period" id="period" class="form-select me-3" onchange="this.form.submit()">
-          {% for period in periods %}
-            <option value="{{ period }}" {% if period == selected_period %}selected{% endif %}>{{ period }}</option>
-          {% endfor %}
-        </select>
-        <label for="department_filter" class="text-white me-2">Department:</label>
-        <select name="department_filter" id="department_filter" class="form-select" onchange="this.form.submit()">
-          <option value="">All</option>
-          {% for dept in departments %}
-            <option value="{{ dept }}" {% if dept == selected_department %}selected{% endif %}>{{ dept }}</option>
-          {% endfor %}
-        </select>
-      </form>
-      <a href="/add" class="btn btn-success">+ Add Employee</a>
-    </div>
-  </div>
+<!-- Stats Cards -->
 
-  <!-- Summary Cards -->
-  <div class="row g-4">
-    {% for label, value in [
-      ('Total Employee', total_employees),
-      ('Total Payroll', total_payroll),
-      ('Total Deduction', total_deduction),
-      ('Net Pay', net_pay),
-      ('Total Contribution', total_contribution),
-      ('Total Loan', total_loan)
-    ] %}
-    <div class="col-md-4">
-      <div class="card summary-card text-center">
-        <div class="card-body">
-          <h6>{{ label }}</h6>
-          {% if label == 'Total Employee' %}
-            <h2>{{ value or 0 }}</h2>
-          {% else %}
-            <h2>₱{{ "{:,.2f}".format(value or 0) }}</h2>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
+<div class="stats-cards">
+<!-- Total Employees -->
+<div class="stat-card">
+<div class="stat-card-icon text-blue">
+<i class="bi bi-people-fill"></i>
+</div>
+<div class="stat-card-info">
+<h3>Total Employees</h3>
+<span>{{ total_employees }}</span>
+</div>
+</div>
 
-  <!-- Employee Table -->
-  <div class="mt-5">
-    <h5 class="text-white mb-3">Employee Management</h5>
-    <div class="card p-3">
-      <table class="table table-bordered table-hover align-middle">
-        <thead class="table-primary">
-          <tr>
-            <th>Name</th>
-            <th>Position</th>
-            <th>Department</th>
-            <th>Salary</th>
-            <th style="width: 240px;">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for emp in employees %}
-          <tr>
-            <td>{{ emp.name }}</td>
-            <td>{{ emp.position }}</td>
-            <td>{{ emp.department }}</td>
-            <td>₱{{ "{:,.2f}".format(emp.salary or 0) }}</td>
-            <td>
-              <a href="/payroll/{{ emp.id }}/pdf" class="btn btn-sm btn-outline-secondary me-1">Payslip</a>
-              <a href="/edit/{{ emp.id }}" class="btn btn-sm btn-outline-secondary me-1">Edit</a>
-              <form action="{{ url_for('delete', emp_id=emp.id) }}" method="POST" class="d-inline-block">
-                <button type="submit"
-                            class="btn btn-sm btn-outline-secondary me-1"
-                            onclick="return confirm('Delete {{ emp.name }}?')">
-                    Delete
-                </button>
-                </form>
-                
-                <form action="{{ url_for('upload_attendance') }}" method="POST" enctype="multipart/form-data" class="mb-4">
-                        <label for="attendance_file" class="form-label text-black">Upload Attendance CSV:</label>
-                        <input type="file" name="attendance_file" id="attendance_file" class="form-control mb-2" accept=".csv" required>
-                        <button type="submit" class="btn btn-sm btn-outline-secondary me-1">Import Attendance</button>
-                </form>
-            </td>
-          </tr>
-          {% else %}
-          <tr>
-            <td colspan="5" class="text-center text-muted">No employees found for this period and department.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+<!-- Total Salary -->
+<div class="stat-card">
+    <div class="stat-card-icon text-red">
+        <i class="bi bi-cash"></i>
     </div>
-  </div>
+    <div class="stat-card-info">
+        <h3>Total Salary</h3>
+        <span>₱{{ total_salary }}</span>
+    </div>
+</div>
+
+<!-- Average Salary (Example) -->
+<div class="stat-card">
+    <div class="stat-card-icon text-lblue">
+        <i class="bi bi-graph-up"></i>
+    </div>
+    <div class="stat-card-info">
+        <h3>Average Salary</h3>
+        <span>₱{% if total_employees > 0 %}{{ "%.2f"|format(total_salary|float / total_employees) }}{% else %}0.00{% endif %}</span>
+    </div>
+</div>
+
+<!-- Recent Payments (Example) -->
+<div class="stat-card">
+    <div class="stat-card-icon text-grey">
+        <i class="bi bi-receipt"></i>
+    </div>
+    <div class="stat-card-info">
+        <h3>Recent Payments</h3>
+        <span>0</span> {# Placeholder as per image #}
+    </div>
+</div>
+
 
 </div>
+
+<!-- Main Content Columns -->
+
+<div class="dashboard-columns">
+
+<!-- Quick Actions Card -->
+<div class="card">
+    <div class="card-header">
+        <h3>Quick Actions</h3>
+    </div>
+    <div class="action-buttons">
+        <a href="{{ url_for('add_employee_route') }}" class="btn btn-action btn-blue">
+            <i class="bi bi-person-plus-fill"></i>
+            <span>Add Employee</span>
+        </a>
+        <a href="#" class="btn btn-action btn-red">
+            <i class="bi bi-calculator-fill"></i>
+            <span>Process Payroll</span>
+        </a>
+        <a href="{{ url_for('employee_list') }}" class="btn btn-action btn-blue">
+            <i class="bi bi-file-earmark-text-fill"></i>
+            <span>View Reports</span>
+        </a>
+        <a href="#" class="btn btn-action btn-red">
+            <i class="bi bi-people-fill"></i>
+            <span>Manage Staff</span>
+        </a>
+    </div>
+</div>
+
+<!-- Recent Employees Card -->
+<div class="card">
+    <div class="card-header">
+        <h3>Recent Employees</h3>
+    </div>
+    <ul class="employee-list">
+        {% for employee in employees|slice(0, 5) %} <!-- Show top 5 -->
+        <li class="employee-list-item">
+            <div class="employee-info">
+                <img src="{{ url_for('static', filename='uploads/' + (employee.photo if employee.photo else 'default.png')) }}" 
+                     alt="{{ employee.name }}"
+                     onerror="this.src='{{ url_for('static', filename='uploads/default.png') }}';">
+                <span>{{ employee.name }}</span>
+            </div>
+            <span class="employee-position">{{ employee.position }}</span>
+        </li>
+        {% else %}
+        <li class="employee-list-item">
+            <span>No employees found.</span>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+
+<!-- No scripts needed for this page as charts were removed to match the new design -->
+
 {% endblock %}

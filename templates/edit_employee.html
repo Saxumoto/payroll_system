@@ -1,28 +1,89 @@
 {% extends 'base.html' %}
+
+{% block title %}Edit Employee - Payroll System{% endblock %}
+{% block page_title %}Edit {{ employee.name }}{% endblock %}
+
 {% block content %}
-<h2>Edit Employee</h2>
-<form method="POST" class="mt-4">
-    <div class="mb-3">
-        <label class="form-label">Name</label>
-        <input type="text" name="name" class="form-control" value="{{ employee[1] }}" required>
+
+<div class="card form-card">
+<div class="card-header">
+<h3>Edit Employee Information</h3>
+</div>
+
+<form method="POST" enctype="multipart/form-data">
+    <div class="form-grid">
+        <!-- Left Column -->
+        <div class="form-column">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" class="form-control" value="{{ employee.name }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="position">Position</label>
+                <input type="text" id="position" name="position" class="form-control" value="{{ employee.position }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="department">Department</label>
+                <input type="text" id="department" name="department" class="form-control" value="{{ employee.department }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="photo">Change Employee Photo</label>
+                <input type="file" id="photo" name="photo" class="form-control" accept="image/*">
+                {% if employee.photo %}
+                <small class="form-text">Current photo: {{ employee.photo }}</small>
+                <img src="{{ url_for('static', filename='uploads/' + employee.photo) }}" alt="Current Photo" class="form-preview-img"
+                     onerror="this.style.display='none'">
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Right Column -->
+        <div class="form-column">
+            <div class="form-group">
+                <label for="salary">Base Salary (Monthly)</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input type="number" id="salary" name="salary" class="form-control" value="{{ employee.salary }}" step="0.01" min="0" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="payroll_period">Payroll Period</label>
+                <select id="payroll_period" name="payroll_period" class="form-control">
+                    <!-- This Jinja magic sets the correct dropdown item as 'selected' -->
+                    {% set periods = ['Monthly', 'Semi-Monthly', 'Weekly'] %}
+                    {% for period in periods %}
+                        <option value="{{ period }}" {% if employee.payroll_period == period %}selected{% endif %}>{{ period }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="date">Hiring Date</label>
+                <input type="date" id="date" name="date" class="form-control" value="{{ employee.date }}">
+            </div>
+
+            <div class="form-group">
+                <label for="hourly_rate">Hourly Rate (if applicable)</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input type="number" id="hourly_rate" name="hourly_rate" class="form-control" value="{{ employee.hourly_rate or '' }}" step="0.01" min="0">
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="mb-3">
-        <label class="form-label">Position</label>
-        <input type="text" name="position" class="form-control" value="{{ employee[2] }}" required>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Salary</label>
-        <input type="number" name="salary" class="form-control" value="{{ employee[3] }}" required>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Payroll Period</label>
-        <input type="text" name="payroll_period" class="form-control" value="{{ employee[4] }}" required>
-    </div>
-    <button type="submit" class="btn btn-primary">Update</button>
-    <a href="/dashboard" class="btn btn-secondary">Cancel</a>
-    <div class="mb-3">
-        <label for="hourly_rate" class="form-label">Hourly Rate</label>
-        <input type="number" step="0.01" name="hourly_rate" id="hourly_rate" class="form-control" value="{{ emp.hourly_rate if emp else '' }}" required>
+    
+    <div class="form-actions">
+        <a href="{{ url_for('employee_list') }}" class="btn btn-outline">Cancel</a>
+        <button type="submit" class="btn btn-action btn-blue">
+            <i class="bi bi-check-circle-fill me-1"></i> Save Changes
+        </button>
     </div>
 </form>
+
+
+</div>
 {% endblock %}

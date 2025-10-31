@@ -24,7 +24,7 @@ class CustomCanvas(canvas.Canvas):
         self._set_metadata()
         super().save()
 
-def generate_payslip_pdf(emp):
+def generate_payroll_pdf(emp):
     # 📦 Fetch employee data (emp is already a dictionary-like object)
     emp_id = emp['id']
     payroll_period = emp['payroll_period']
