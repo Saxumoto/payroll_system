@@ -185,6 +185,8 @@ def employee_list():
         emp_dict.update(calcs) # Add calculated values
         employee_data_list.append(emp_dict)
 
+    # NOTE: This route correctly renders 'employees.html', which is the
+    # template that works. 'employee_list.html' has a typo and is not used.
     return render_template('employees.html',
                            employees=employee_data_list,
                            total_employees=total_employees,
@@ -414,6 +416,7 @@ def export_payroll_csv():
 @admin_required
 def admin_approvals():
     # This is a placeholder. Implement approval logic if needed.
+    # This template will be fixed by the Bootstrap CSS link in base.html
     return render_template('admin_approvals.html')
 
 # --- Main Dashboard Route ---
@@ -426,74 +429,31 @@ def dashboard():
     conn.row_factory = sqlite3.Row  # Ensure we can access columns by name
     c = conn.cursor()
 
-    # Fetch all employees
-    c.execute('SELECT * FROM employees ORDER BY name')
+    # Fetch all employees for "Recent Employees" card
+    c.execute('SELECT * FROM employees ORDER BY date DESC') # Order by date for "Recent"
     employee_rows = c.fetchall()
     
     # Convert rows to a list of dictionaries
     employees = [dict(row) for row in employee_rows]
 
-    # Calculate totals
+    # Calculate totals for stat cards
     total_employees = len(employees)
     total_salary = sum(emp['salary'] for emp in employees if emp['salary'])
-    
-    # Initialize aggregated deductions
-    total_sss = 0
-    total_philhealth = 0
-    total_pagibig = 0
-    net_total = 0
-
-    # Calculate deductions and net pay for each employee
-    for emp in employees:
-        # Use the centralized calculator
-        calcs = calculate_salary(emp['salary'])
-        
-        # Add all calculated values to the emp dict
-        emp.update(calcs) 
-
-        # Aggregate totals
-        total_sss += calcs['sss']
-        total_philhealth += calcs['philhealth']
-        total_pagibig += calcs['pagibig']
-        net_total += calcs['net_salary']
-
-    # Fetch department breakdown
-    c.execute('''
-        SELECT department, COUNT(id) as count
-        FROM employees
-        GROUP BY department
-    ''')
-    department_data = c.fetchall()
-
-    # Fetch position breakdown
-    c.execute('''
-        SELECT position, COUNT(id) as count
-        FROM employees
-        GROUP BY position
-    ''')
-    position_data = c.fetchall()
 
     conn.close()
-
-    # Format data for charts
-    department_labels = [row['department'] for row in department_data]
-    department_counts = [row['count'] for row in department_data]
     
-    position_labels = [row['position'] for row in position_data]
-    position_counts = [row['count'] for row in position_data]
+    # --- UPDATE ---
+    # Removed all the unused logic for department/position charts
+    # and aggregated deductions (total_sss, net_total, etc.)
+    # as they are not used in the dashboard.html template.
+    # The template only needs total_employees, total_salary,
+    # and the list of employees.
+    # ----------------
 
     return render_template('dashboard.html',
                            employees=employees,
                            total_employees=total_employees,
-                           total_salary=f'{total_salary:,.2f}',
-                           total_sss=f'{total_sss:,.2f}',
-                           total_philhealth=f'{total_philhealth:,.2f}',
-                           total_pagibig=f'{total_pagibig:,.2f}',
-                           net_total=f'{net_total:,.2f}',
-                           department_labels=department_labels,
-                           department_counts=department_counts,
-                           position_labels=position_labels,
-                           position_counts=position_counts)
+                           total_salary=f'{total_salary:,.2f}')
 
 
 # --- Initialization ---

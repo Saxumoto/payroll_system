@@ -90,7 +90,7 @@
         <h3>Recent Employees</h3>
     </div>
     <ul class="employee-list">
-        {% for employee in employees|slice(0, 5) %} <!-- Show top 5 -->
+        {% for employee in employees[0:5] %} <!-- Show top 5 -->
         <li class="employee-list-item">
             <div class="employee-info">
                 <img src="{{ url_for('static', filename='uploads/' + (employee.photo if employee.photo else 'default.png')) }}" 

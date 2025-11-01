@@ -1,312 +1,218 @@
-/*
- * =========================================
- * Main Dashboard Stylesheet
- * * Based on blue/red gradient design
- * =========================================
- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* --- Global & Typography --- */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+/* --- Form Styles (Add/Edit Employee) --- */
+.form-card {
+    min-height: auto; /* Override card min-height for forms */
 }
 
-body {
-    font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg, #6e8efb, #a777e3, #e36bae);
-    background-size: 200% 200%;
-    animation: gradientBG 15s ease infinite;
-    min-height: 100vh;
-    color: #333;
-}
-
-@keyframes gradientBG {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-/* --- Layout --- */
-.container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-/* --- Navbar --- */
-.navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.navbar h1 {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin: 0;
-}
-
-.btn {
-    padding: 0.75rem 1.25rem;
-    border: none;
-    border-radius: 12px;
-    color: #ffffff;
-    font-size: 0.95rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-}
-
-.btn-outline {
-    background: transparent;
-    border: 2px solid #ffffff;
-    color: #ffffff;
-}
-.btn-outline:hover {
-    background: #ffffff;
-    color: #6e8efb;
-}
-
-/* --- Dashboard Grid --- */
-.stats-cards {
+.form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
+    grid-template-columns: 1fr;
+    gap: 0 2rem;
 }
 
-.stat-card {
-    background-color: #ffffff;
-    border-radius: 16px;
-    padding: 1.5rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.stat-card-icon {
-    font-size: 2.5rem;
-    padding: 0.5rem;
-}
-.stat-card-info h3 {
-    font-size: 0.9rem;
-    color: #777;
-    margin-bottom: 0.25rem;
-    font-weight: 500;
-}
-.stat-card-info span {
-    font-size: 1.75rem;
-    font-weight: 600;
-    color: #333;
-}
-
-/* Icon colors from image */
-.text-blue { color: #007bff; }
-.text-red { color: #dc3545; }
-.text-lblue { color: #17a2b8; }
-.text-grey { color: #6c757d; }
-
-
-.dashboard-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-}
-
-@media (max-width: 992px) {
-    .dashboard-columns {
-        grid-template-columns: 1fr;
+/* On wider screens, use two columns */
+@media (min-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr 1fr;
     }
 }
 
-/* --- Cards (for main content) --- */
-.card {
-    background-color: #ffffff;
-    border-radius: 16px;
-    padding: 1.5rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+.form-group {
     margin-bottom: 1.5rem;
-    min-height: 300px; /* Ensure cards have some height */
+    text-align: left;
 }
 
-.card-header {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-}
-
-.card-header h3 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #007bff; /* Blue title */
-    margin: 0;
-}
-
-/* --- Buttons (Dashboard Actions) --- */
-.action-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    height: 100%;
-}
-
-.btn-action {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 1.5rem;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    text-align: center;
-}
-.btn-action i {
-    font-size: 1.5rem;
+.form-group label {
+    display: block;
     margin-bottom: 0.5rem;
+    color: #555;
+    font-weight: 500;
 }
 
-.btn-blue {
-    background-color: #007bff;
-    color: #ffffff;
-}
-.btn-blue:hover {
-    background-color: #0069d9;
-}
-
-.btn-red {
-    background-color: #dc3545;
-    color: #ffffff;
-}
-.btn-red:hover {
-    background-color: #c82333;
+.form-control {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background-color: #f4f7f6;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    color: #333;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-/* --- Employee List (in card) --- */
-.employee-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.form-control:focus {
+    outline: none;
+    border-color: #6e8efb;
+    box-shadow: 0 0 0 3px rgba(110, 142, 251, 0.3);
 }
-.employee-list-item {
+
+.input-group {
     display: flex;
-    align-items: center;
+}
+.input-group .input-group-text {
+    padding: 0.85rem 1rem;
+    background-color: #eee;
+    border: 1px solid #ddd;
+    border-right: 0;
+    border-radius: 12px 0 0 12px;
+}
+.input-group .form-control {
+    border-radius: 0 12px 12px 0;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+}
+
+.form-preview-img {
+    max-width: 100px;
+    height: auto;
+    border-radius: 8px;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+}
+
+
+/* --- Employee List Page --- */
+.card-header-content {
+    display: flex;
     justify-content: space-between;
-    padding: 1rem 0;
+    align-items: center;
+}
+
+.table-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    border-top: 1px solid #eee;
+    background-color: #fcfcfc;
+    border-radius: 0 0 16px 16px;
+}
+.summary-item {
+    font-size: 1rem;
+    color: #555;
+}
+.summary-item strong {
+    color: #333;
+    font-weight: 600;
+}
+
+
+/* --- Payslip Styles (payroll.html) --- */
+.payslip-card {
+    min-height: auto;
+}
+
+.payslip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
     border-bottom: 1px solid #eee;
 }
-.employee-list-item:last-child {
-    border-bottom: none;
-}
-.employee-info {
+.payslip-header-info {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1.5rem;
 }
-.employee-info img {
-    width: 40px;
-    height: 40px;
+.payslip-photo {
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     object-fit: cover;
+    border: 3px solid #eee;
 }
-.employee-info span {
-    font-weight: 500;
-    color: #333;
+.payslip-header-info h2 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
 }
-.employee-position {
-    font-size: 0.9rem;
+.payslip-header-info p {
+    margin: 0;
+    font-size: 1.1rem;
     color: #777;
 }
 
-/* --- Flash Messages --- */
-.flash-messages {
-    width: 100%;
-    margin-bottom: 1.5rem;
-    list-style: none;
-    padding: 0;
+.payslip-details-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin: 2rem 0;
 }
-.flash-messages li {
-    padding: 1rem;
-    border-radius: 12px;
-    font-weight: 500;
-    margin-bottom: 1rem;
-    text-align: center;
-}
-.flash-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-.flash-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+@media (min-width: 768px) {
+    .payslip-details-grid {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
-/* --- Table Styles (for employee_list.html) --- */
-.table-wrapper {
-    overflow-x: auto;
-}
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-}
-.table th,
-.table td {
-    padding: 1rem;
-    text-align: left;
-    vertical-align: middle;
-    border-bottom: 1px solid #eee;
-}
-.table thead {
-    background-color: #f4f7f6;
-}
-.table thead th {
-    color: #333;
+.payslip-group h3 {
+    font-size: 1.25rem;
     font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.85rem;
+    color: #007bff;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
 }
-.table tbody tr:hover {
-    background-color: #f9f9f9;
-}
-.table .actions {
+.payslip-item {
     display: flex;
-    gap: 0.5rem;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f0f0f0;
 }
-.table .actions form {
-    display: inline-block;
+.payslip-item:last-child {
+    border-bottom: none;
 }
-.table-profile img {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    margin-right: 0.5rem;
-    object-fit: cover;
+.payslip-item .amount {
+    font-weight: 500;
 }
-.btn-sm {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
+.payslip-item .positive {
+    color: #155724;
 }
-.btn-warning {
-    background-color: #ffc107;
-    color: #333;
-}
-.btn-info {
-    background-color: #17a2b8;
-    color: #fff;
-}
-.btn-danger {
-    background-color: #dc3545;
-    color: #fff;
+.payslip-item .negative {
+    color: #721c24;
 }
 
+.payslip-summary {
+    background-color: #f9f9f9;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #eee;
+}
+.payslip-summary .summary-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+.payslip-summary .summary-item:last-child {
+    margin-bottom: 0;
+}
+.payslip-summary .summary-item.total {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    padding-top: 1rem;
+    border-top: 2px solid #ddd;
+}
+.payslip-summary .net-pay-total {
+    color: #007bff;
+}
+
+.payslip-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    color: #777;
+    font-size: 0.9rem;
+}
+.payslip-footer p {
+    margin: 0;
+}

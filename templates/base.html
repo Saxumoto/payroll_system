@@ -1,62 +1,87 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}Payroll System{% endblock %}</title>
 
-<!-- Custom Dashboard CSS -->
-<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
-<!-- Bootstrap Icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-<!-- Chart.js for graphs -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 <body>
 
-{% if current_user.is_authenticated %}
-<div class="container">
-<!-- Top Navbar -->
-<nav class="navbar">
-<h1>{% block page_title %}Welcome, {{ current_user.username }}!{% endblock %}</h1>
-<a href="{{ url_for('logout') }}" class="btn btn-outline">
-<i class="bi bi-box-arrow-right me-1"></i> Sign Out
-</a>
-</nav>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>Payroll</h2>
+        </div>
+        <ul class="sidebar-nav">
+            <li class="{% if request.endpoint == 'dashboard' %}active{% endif %}">
+                <a href="{{ url_for('dashboard') }}"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+            </li>
+            <li class="{% if request.endpoint == 'employee_list' %}active{% endif %}">
+                <a href="{{ url_for('employee_list') }}"><i class="bi bi-people-fill"></i> Employees</a>
+            </li>
+            <li class="{% if request.endpoint == 'add_employee_route' %}active{% endif %}">
+                <a href="{{ url_for('add_employee_route') }}"><i class="bi bi-person-plus-fill"></i> Add Employee</a>
+            </li>
+            <li>
+                <a href="#"><i class="bi bi-calculator-fill"></i> Process Payroll</a>
+            </li>
+            <li>
+                <a href="#"><i class="bi bi-file-earmark-text-fill"></i> Reports</a>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <a href="{{ url_for('logout') }}" class="btn-logout">
+                <i class="bi bi-box-arrow-right"></i> Sign Out
+            </a>
+        </div>
+    </div>
 
-    <!-- Page Content -->
-    <main>
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            <ul class="flash-messages">
-                {% for category, message in messages %}
-                    <li class="flash-{{ category }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        {% endwith %}
+    <div class="main-wrapper">
+        
+        <header class="top-bar">
+            <div class="search-bar">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Search...">
+            </div>
+            <div class="user-info">
+                <i class="bi bi-bell-fill"></i>
+                <span class="username">{{ current_user.username }}</span>
+                <img src="{{ url_for('static', filename='uploads/default.png') }}" alt="User" class="user-avatar">
+            </div>
+        </header>
 
-        <!-- Content Block -->
-        {% block content %}
-        <!-- Content from child templates will go here -->
-        {% endblock %}
-    </main>
-</div>
+        <main class="content-area">
+            
+            <div class="page-header">
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+            </div>
 
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <ul class="flash-messages">
+                    {% for category, message in messages %}
+                        <li class="flash-{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            {% endwith %}
 
-{% endif %}
+            {% block content %}
+            {% endblock %}
 
-{% block scripts %}
+        </main>
+    </div>
 
-<!-- Additional scripts from child templates will go here -->
-
-{% endblock %}
+    {% block scripts %}
+    {% endblock %}
 
 </body>
 </html>
