@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Attendance - {{ employee.name }}{% endblock %}
+{% block page_title %}Manage Attendance for {{ employee.name }}{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-columns">
+
+    <div class="card form-card">
+        <div class="card-header">
+            <h3>Add Time Record</h3>
+        </div>
+        <form method="POST" action="{{ url_for('manage_attendance', emp_id=employee.id) }}" style="padding: 1.5rem;">
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date" class="form-control" value="{{ current_date }}" required>
+            </div>
+            <div class="form-group">
+                <label for="hours_worked">Hours Worked (Regular)</label>
+                <div class="input-group">
+                    <input type="number" id="hours_worked" name="hours_worked" class="form-control" step="0.01" min="0" value="8.0" required>
+                    <span class="input-group-text">hours</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="overtime_hours">Overtime Hours</label>
+                <div class="input-group">
+                    <input type="number" id="overtime_hours" name="overtime_hours" class="form-control" step="0.01" min="0" value="0.0">
+                    <span class="input-group-text">hours</span>
+                </div>
+            </div>
+            <div class="form-actions" style="border-top: none; padding-top: 0;">
+                <button type="submit" class="btn btn-action">
+                    <i class="bi bi-clock-history me-1"></i> Add Record
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Recent Time Records (Last 30)</h3>
+        </div>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Regular Hours</th>
+                        <th>Overtime Hours</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in time_records %}
+                    <tr>
+                        <td>{{ record.date }}</td>
+                        <td>{{ "%.2f"|format(record.hours_worked) }}</td>
+                        <td>{{ "%.2f"|format(record.overtime_hours) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" style="text-align: center; padding: 1.5rem;">No time records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

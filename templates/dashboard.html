@@ -5,10 +5,7 @@
 
 {% block content %}
 
-<!-- Stats Cards -->
-
 <div class="stats-cards">
-<!-- Total Employees -->
 <div class="stat-card">
 <div class="stat-card-icon text-blue">
 <i class="bi bi-people-fill"></i>
@@ -19,7 +16,6 @@
 </div>
 </div>
 
-<!-- Total Salary -->
 <div class="stat-card">
     <div class="stat-card-icon text-red">
         <i class="bi bi-cash"></i>
@@ -30,7 +26,6 @@
     </div>
 </div>
 
-<!-- Average Salary (Example) -->
 <div class="stat-card">
     <div class="stat-card-icon text-lblue">
         <i class="bi bi-graph-up"></i>
@@ -41,7 +36,6 @@
     </div>
 </div>
 
-<!-- Recent Payments (Example) -->
 <div class="stat-card">
     <div class="stat-card-icon text-grey">
         <i class="bi bi-receipt"></i>
@@ -55,43 +49,40 @@
 
 </div>
 
-<!-- Main Content Columns -->
-
 <div class="dashboard-columns">
 
-<!-- Quick Actions Card -->
 <div class="card">
     <div class="card-header">
         <h3>Quick Actions</h3>
     </div>
     <div class="action-buttons">
-        <a href="{{ url_for('add_employee_route') }}" class="btn btn-action btn-blue">
+        <a href="{{ url_for('add_employee_route') }}" class="btn-quick-action btn-blue">
             <i class="bi bi-person-plus-fill"></i>
             <span>Add Employee</span>
         </a>
-        <a href="#" class="btn btn-action btn-red">
-            <i class="bi bi-calculator-fill"></i>
-            <span>Process Payroll</span>
-        </a>
-        <a href="{{ url_for('employee_list') }}" class="btn btn-action btn-blue">
+        <form action="{{ url_for('process_payroll') }}" method="POST" onsubmit="return confirm('This will process payroll for all employees for the current month. Are you sure?');" style="margin: 0;">
+            <button type="submit" class="btn-quick-action btn-red" style="width: 100%;">
+                <i class="bi bi-calculator-fill"></i>
+                <span>Process Payroll</span>
+            </button>
+        </form>
+        <a href="{{ url_for('employee_list') }}" class="btn-quick-action btn-blue">
             <i class="bi bi-file-earmark-text-fill"></i>
             <span>View Reports</span>
         </a>
-        <a href="#" class="btn btn-action btn-red">
+        <a href="#" class="btn-quick-action btn-red">
             <i class="bi bi-people-fill"></i>
             <span>Manage Staff</span>
         </a>
     </div>
 </div>
 
-<!-- Recent Employees Card -->
 <div class="card">
     <div class="card-header">
         <h3>Recent Employees</h3>
     </div>
     <ul class="employee-list">
-        {% for employee in employees[0:5] %} <!-- Show top 5 -->
-        <li class="employee-list-item">
+        {% for employee in employees[0:5] %} <li class="employee-list-item">
             <div class="employee-info">
                 <img src="{{ url_for('static', filename='uploads/' + (employee.photo if employee.photo else 'default.png')) }}" 
                      alt="{{ employee.name }}"
@@ -113,7 +104,5 @@
 {% endblock %}
 
 {% block scripts %}
-
-<!-- No scripts needed for this page as charts were removed to match the new design -->
 
 {% endblock %}

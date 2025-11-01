@@ -113,12 +113,12 @@ color: #777;
     </tr>
     <tr>
         <td><strong>Pay Period:</strong></td>
-        <td>{{ employee.payroll_period }}</td>
+        <td>{{ employee.pay_period_start }} to {{ employee.pay_period_end }}</td>
     </tr>
     <tr>
-        <td><strong>Pay Date:</strong></td>
-        <td>{{ employee.date or 'N/A' }}</td>
-    </tr>
+    <td><strong>Pay Date:</strong></td>
+    <td>{{ employee.pay_period_end }}</td>
+</tr>
 </table>
 
 <h3>Payroll Details</h3>
@@ -130,16 +130,18 @@ color: #777;
         </tr>
     </thead>
     <tbody>
-        <!-- Earnings -->
         <tr>
-            <td><strong>Earnings</strong></td>
-            <td></td>
+        <td><strong>Earnings</strong></td>
+        <td></td>
         </tr>
         <tr>
-            <td style="padding-left: 30px;">Base Salary</td>
-            <td class="amount positive">₱{{ "%.2f"|format(employee.salary) }}</td>
+            <td style="padding-left: 30px;">Regular Pay ({{ "%.2f"|format(employee.total_regular_hours) }} hrs)</td>
+            <td class="amount positive">₱{{ "%.2f"|format(employee.regular_pay) }}</td>
         </tr>
-        <!-- Deductions -->
+        <tr>
+            <td style="padding-left: 30px;">Overtime Pay ({{ "%.2f"|format(employee.total_overtime_hours) }} hrs)</td>
+            <td class="amount positive">₱{{ "%.2f"|format(employee.overtime_pay) }}</td>
+        </tr>
         <tr>
             <td><strong>Deductions</strong></td>
             <td></td>
@@ -156,14 +158,22 @@ color: #777;
             <td style="padding-left: 30px;">Pag-IBIG Contribution</td>
             <td class="amount negative">(₱{{ "%.2f"|format(employee.pagibig) }})</td>
         </tr>
+        <tr>
+            <td style="padding-left: 30px;">Withholding Tax</td>
+            <td class="amount negative">(₱{{ "%.2f"|format(employee.tax) }})</td>
+        </tr>
+        <tr>
+            <td style="padding-left: 30px;">Loan Deductions</td>
+            <td class="amount negative">(₱{{ "%.2f"|format(employee.loan_deductions) }})</td>
+        </tr>
     </tbody>
 </table>
 
 <div class="summary-section">
     <table class="summary-table">
         <tr>
-            <td>Gross Earnings</td>
-            <td class="amount">₱{{ "%.2f"|format(employee.salary) }}</td>
+        <td>Gross Earnings</td>
+        <td class="amount">₱{{ "%.2f"|format(employee.gross_pay) }}</td>
         </tr>
         <tr>
             <td>Total Deductions</td>

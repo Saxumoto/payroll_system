@@ -1,0 +1,115 @@
+{% extends 'employee_base.html' %}
+
+{% block title %}My Payslips{% endblock %}
+{% block page_title %}My Payslips{% endblock %}
+
+{% block content %}
+
+<div class="card payslip-card">
+    <div class="card-header">
+        <h3>Current Pay Period ({{ payslip.pay_period_start }} to {{ payslip.pay_period_end }})</h3>
+    </div>
+    
+    <div class="payslip-header">
+        <div class="payslip-header-info">
+            <img src="{{ url_for('static', filename='uploads/' + (employee_data.photo if employee_data.photo else 'default.png')) }}"
+                 alt="{{ employee_data.name }}" class="payslip-photo"
+                 onerror="this.src='{{ url_for('static', filename='uploads/default.png') }}';">
+            <div>
+                <h2>{{ employee_data.name }}</h2>
+                <p>{{ employee_data.position }}</p>
+            </div>
+        </div>
+        <div class="payslip-header-actions">
+            <a href="{{ url_for('download_payroll_pdf', emp_id=employee_data.id) }}" class="btn btn-action btn-blue">
+                <i class="bi bi-download me-1"></i> Download PDF
+            </a>
+        </div>
+    </div>
+    
+    <div class="payslip-details-grid">
+        <div class="payslip-group">
+            <h3>Earnings</h3>
+            <div class="payslip-item">
+                <span>Regular Pay ({{ "%.2f"|format(payslip.total_regular_hours) }} hrs)</span>
+                <span class="amount positive">₱{{ "%.2f"|format(payslip.regular_pay) }}</span>
+            </div>
+            <div class="payslip-item">
+                <span>Overtime Pay ({{ "%.2f"|format(payslip.total_overtime_hours) }} hrs)</span>
+                <span class="amount positive">₱{{ "%.2f"|format(payslip.overtime_pay) }}</span>
+            </div>
+        </div>
+        <div class="payslip-group">
+            <h3>Deductions</h3>
+            <div class="payslip-item">
+                <span>SSS</span>
+                <span class="amount negative">(₱{{ "%.2f"|format(payslip.sss) }})</span>
+            </div>
+            <div class="payslip-item">
+                <span>PhilHealth</span>
+                <span class="amount negative">(₱{{ "%.2f"|format(payslip.philhealth) }})</span>
+            </div>
+            <div class="payslip-item">
+                <span>Pag-IBIG</span>
+                <span class="amount negative">(₱{{ "%.2f"|format(payslip.pagibig) }})</span>
+            </div>
+            <div class="payslip-item">
+                <span>Tax</span>
+                <span class="amount negative">(₱{{ "%.2f"|format(payslip.tax) }})</span>
+            </div>
+            <div class="payslip-item">
+                <span>Loans</span>
+                <span class="amount negative">(₱{{ "%.2f"|format(payslip.loan_deductions) }})</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="payslip-summary">
+        <div class="summary-item">
+            <span>Gross Earnings</span>
+            <strong>₱{{ "%.2f"|format(payslip.gross_pay) }}</strong>
+        </div>
+        <div class="summary-item">
+            <span>Total Deductions</span>
+            <strong>₱{{ "%.2f"|format(payslip.total_deductions) }}</strong>
+        </div>
+        <div class="summary-item total">
+            <span>Net Pay</span>
+            <strong class="net-pay-total">₱{{ "%.2f"|format(payslip.net_salary) }}</strong>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Payslip History</h3>
+    </div>
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Pay Period</th>
+                    <th>Gross Pay</th>
+                    <th>Deductions</th>
+                    <th>Net Pay</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for past_slip in payslip_history %}
+                <tr>
+                    <td>{{ past_slip.pay_period_start }} - {{ past_slip.pay_period_end }}</td>
+                    <td>₱{{ "%.2f"|format(past_slip.gross_pay) }}</td>
+                    <td>₱{{ "%.2f"|format(past_slip.total_deductions) }}</td>
+                    <td>₱{{ "%.2f"|format(past_slip.net_pay) }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 1.5rem;">No payslip history found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

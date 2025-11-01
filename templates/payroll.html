@@ -6,7 +6,6 @@
 {% block content %}
 
 <div class="card payslip-card">
-<!-- Payslip Header -->
 <div class="payslip-header">
 <div class="payslip-header-info">
 <img src="{{ url_for('static', filename='uploads/' + (employee.photo if employee.photo else 'default.png')) }}"
@@ -26,17 +25,18 @@ onerror="this.src='{{ url_for('static', filename='uploads/default.png') }}';">
 </div>
 </div>
 
-<!-- Payslip Details -->
 <div class="payslip-details-grid">
     <div class="payslip-group">
-        <h3>Earnings</h3>
-        <div class="payslip-item">
-            <span>Base Salary</span>
-            <span class="amount positive">₱{{ "%.2f"|format(employee.salary) }}</span>
-        </div>
-        <!-- Add other earnings here if any (e.g., bonuses, overtime) -->
+    <h3>Earnings</h3>
+    <div class="payslip-item">
+        <span>Regular Pay ({{ "%.2f"|format(employee.total_regular_hours) }} hrs)</span>
+        <span class="amount positive">₱{{ "%.2f"|format(employee.regular_pay) }}</span>
     </div>
-
+    <div class="payslip-item">
+        <span>Overtime Pay ({{ "%.2f"|format(employee.total_overtime_hours) }} hrs)</span>
+        <span class="amount positive">₱{{ "%.2f"|format(employee.overtime_pay) }}</span>
+    </div>
+    </div>
     <div class="payslip-group">
         <h3>Deductions</h3>
         <div class="payslip-item">
@@ -51,10 +51,17 @@ onerror="this.src='{{ url_for('static', filename='uploads/default.png') }}';">
             <span>Pag-IBIG Contribution</span>
             <span class="amount negative">(₱{{ "%.2f"|format(employee.pagibig) }})</span>
         </div>
+        <div class="payslip-item">
+            <span>Withholding Tax (EWT)</span>
+            <span class="amount negative">(₱{{ "%.2f"|format(employee.tax) }})</span>
+        </div>
+        <div class="payslip-item">
+            <span>Loan Deductions</span>
+            <span class="amount negative">(₱{{ "%.2f"|format(employee.loan_deductions) }})</span>
+        </div>
     </div>
 </div>
 
-<!-- Payslip Summary -->
 <div class="payslip-summary">
     <div class="summary-item">
         <span>Gross Earnings</span>
@@ -70,10 +77,9 @@ onerror="this.src='{{ url_for('static', filename='uploads/default.png') }}';">
     </div>
 </div>
 
-<!-- Payslip Footer -->
 <div class="payslip-footer">
-    <p><strong>Payroll Period:</strong> {{ employee.payroll_period }}</p>
-    <p><strong>Pay Date:</strong> {{ employee.date or 'N/A' }}</p>
+    <p><strong>Payroll Period:</strong> {{ employee.pay_period_start }} to {{ employee.pay_period_end }}</p>
+    <p><strong>Pay Date:</strong> {{ employee.pay_period_end }}</p>
 </div>
 
 

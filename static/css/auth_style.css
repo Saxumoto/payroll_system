@@ -67,79 +67,15 @@ body {
     margin-bottom: 2rem;
 }
 
-.form-group {
-    margin-bottom: 1.5rem;
-    text-align: left;
-}
+/*
+  SHARED STYLES MOVED TO style.css:
+  .form-group, .form-group label, .form-control, .form-control:focus,
+  .btn, .btn-primary, .btn-primary:hover, .btn-gradient, .btn-gradient:hover,
+  .btn-secondary, .btn-secondary:hover,
+  .flash-messages, .flash-messages li, .flash-success, .flash-danger
+*/
 
-.form-group label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: #555;
-    font-weight: 500;
-}
-
-.form-control {
-    width: 100%;
-    padding: 0.85rem 1rem;
-    background-color: #f4f7f6;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    color: #333;
-    font-size: 1rem;
-    box-sizing: border-box;
-    transition: border-color 0.3s, box-shadow 0.3s;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: #6e8efb;
-    box-shadow: 0 0 0 3px rgba(110, 142, 251, 0.3);
-}
-
-.btn {
-    padding: 0.85rem 1.5rem;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    display: inline-block;
-    border: none;
-}
-
-.btn-primary {
-    background-color: #d9534f; /* Red button */
-    color: #ffffff;
-    border: 1px solid #d9534f;
-}
-.btn-primary:hover {
-    background-color: #c9302c;
-    border-color: #c9302c;
-}
-
-/* Gradient button from login */
-.btn-gradient {
-    background: linear-gradient(90deg, #6e8efb, #e36bae);
-    color: #ffffff;
-    border: none;
-}
-.btn-gradient:hover {
-    opacity: 0.9;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.btn-secondary {
-    background-color: transparent;
-    color: #555;
-    border: 1px solid #ccc;
-}
-.btn-secondary:hover {
-    background-color: #f4f7f6;
-    border-color: #aaa;
-}
-
+/* --- Auth Specific Styles --- */
 .auth-switch {
     text-align: center;
     margin-top: 1.5rem;
@@ -151,6 +87,14 @@ body {
     text-decoration: none;
     font-weight: 500;
 }
+
+/* Limit flash message width on auth pages */
+.auth-card .flash-messages {
+    max-width: 450px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 
 /* --- Welcome Page Styles --- */
 .home-header {
@@ -234,30 +178,3 @@ body {
     color: #f0f0f0;
     margin-bottom: 1.5rem;
 }
-
-/* Flash Messages */
-.flash-messages {
-    width: 100%;
-    max-width: 450px;
-    margin-bottom: 1rem;
-    list-style: none;
-    padding: 0;
-}
-.flash-messages li {
-    padding: 1rem;
-    border-radius: 12px;
-    font-weight: 500;
-    margin-bottom: 1rem;
-    text-align: center;
-}
-.flash-success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-.flash-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-

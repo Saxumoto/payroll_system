@@ -5,6 +5,7 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.pdfgen import canvas
+import models # We need to import models to fetch related data
 
 class CustomCanvas(canvas.Canvas):
     def __init__(self, *args, **kwargs):
@@ -24,65 +25,19 @@ class CustomCanvas(canvas.Canvas):
         self._set_metadata()
         super().save()
 
-def generate_payroll_pdf(emp):
-    # 📦 Fetch employee data (emp is already a dictionary-like object)
-    emp_id = emp['id']
-    payroll_period = emp['payroll_period']
-
-    # 📊 Fetch attendance and loan data
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    c = conn.cursor()
-
-    c.execute('SELECT * FROM attendance WHERE employee_id = ? AND payroll_period = ?', (emp_id, payroll_period))
-    att = c.fetchone()
-    overtime_hours = att['overtime_hours'] if att else 0
-    absences = att['absences'] if att else 0
-
-    c.execute('SELECT loan FROM deductions WHERE employee_id = ? AND payroll_period = ?', (emp_id, payroll_period))
-    ded = c.fetchone()
-    loan = ded['loan'] if ded else 0
-
-    conn.close()
-
-    # 💰 Calculations
-    salary = float(emp['salary'])
-
-    # Use hourly_rate from employee record if available, else calculate
-    if emp['hourly_rate'] and emp['hourly_rate'] > 0:
-         hourly_rate = float(emp['hourly_rate'])
-    else:
-         hourly_rate = salary / 22 / 8  # Default calculation
-
-    overtime_pay = overtime_hours * hourly_rate * 1.25
-    absence_deduction = absences * 8 * hourly_rate
-    gross_pay = salary + overtime_pay - absence_deduction
-
-    sss = salary * 0.01
-    philhealth = salary * 0.015
-    pagibig = salary * 0.01
-    total_deductions = sss + philhealth + pagibig + loan + absence_deduction
-    net_pay = gross_pay - total_deductions
-
-    # Round values
-    salary = round(salary, 2)
-    overtime_pay = round(overtime_pay, 2)
-    absence_deduction = round(absence_deduction, 2)
-    gross_pay = round(gross_pay, 2)
-    sss = round(sss, 2)
-    philhealth = round(philhealth, 2)
-    pagibig = round(pagibig, 2)
-    loan = round(loan, 2)
-    net_pay = round(net_pay, 2)
-
+def create_pdf_from_payroll_data(emp):
+    """
+    Generates a PDF using ReportLab based on calculated employee data.
+    'emp' must be the calculated payroll dict from utils.calculate_payroll.
+    """
     # 📄 PDF setup
     buffer = io.BytesIO()
     styles = getSampleStyleSheet()
     elements = []
 
     # 🏷️ Header
-    elements.append(Paragraph("The Visa Center - Davao", styles['Title']))
-    elements.append(Paragraph("Employee Payslip", styles['Heading2']))
+    elements.append(Paragraph("<b>The Visa Center - Davao</b>", styles['Title']))
+    elements.append(Paragraph("<b>Employee Payslip</b>", styles['Heading2']))
     elements.append(Spacer(1, 12))
 
     # 👤 Employee Info Table
@@ -90,7 +45,7 @@ def generate_payroll_pdf(emp):
         ['Employee Name', emp['name']],
         ['Position', emp['position']],
         ['Department', emp['department']],
-        ['Payroll Period', emp['payroll_period']],
+        ['Pay Period', f"{emp['pay_period_start']} to {emp['pay_period_end']}"],
     ]
     info_table = Table(info_data, colWidths=[150, 300])
     info_table.setStyle(TableStyle([
@@ -102,26 +57,35 @@ def generate_payroll_pdf(emp):
     elements.append(Spacer(1, 12))
 
     # 💸 Salary Breakdown Table
+    # NOTE: The data structure here must match the data passed from app.py/utils.py
     salary_data = [
-        ['Basic Salary', f"PHP {salary:,.2f}"],
-        ['Overtime Pay', f"PHP {overtime_pay:,.2f}"],
-        ['Absence Deduction', f"PHP {absence_deduction:,.2f}"],
-        ['Gross Pay', f"PHP {gross_pay:,.2f}"],
-        ['SSS Deduction', f"PHP {sss:,.2f}"],
-        ['PhilHealth Deduction', f"PHP {philhealth:,.2f}"],
-        ['Pag-IBIG Deduction', f"PHP {pagibig:,.2f}"],
-        ['Loan Deduction', f"PHP {loan:,.2f}"],
-        ['Net Pay', f"PHP {net_pay:,.2f}"],
+        ['', 'Amount (PHP)'],
+        ['Earnings', ''],
+        ['Base Salary', f"{emp['salary']:,.2f}"],
+        [f"Regular Pay ({emp['total_regular_hours']:,.2f} hrs)", f"{emp['regular_pay']:,.2f}"],
+        [f"Overtime Pay ({emp['total_overtime_hours']:,.2f} hrs)", f"{emp['overtime_pay']:,.2f}"],
+        ['Deductions', ''],
+        ['SSS Contribution', f"({emp['sss']:,.2f})"],
+        ['PhilHealth Contribution', f"({emp['philhealth']:,.2f})"],
+        ['Pag-IBIG Contribution', f"({emp['pagibig']:,.2f})"],
+        ['Withholding Tax (EWT)', f"({emp['tax']:,.2f})"],
+        ['Loan Deductions', f"({emp['loan_deductions']:,.2f})"],
+        ['', ''],
+        ['Total Deductions', f"PHP ({emp['total_deductions']:,.2f})"],
+        ['NET PAY', f"PHP {emp['net_salary']:,.2f}"],
     ]
-    salary_table = Table(salary_data, colWidths=[200, 250])
+    salary_table = Table(salary_data, colWidths=[200, 100])
     salary_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (0, 0), colors.lightgrey),
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-        ('ALIGN', (1, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 11),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('SPAN', (0, 1), (1, 1)),
+        ('SPAN', (0, 5), (1, 5)),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+        ('LINEBELOW', (0, 12), (-1, 12), 1, colors.black),
+        ('FONTNAME', (0, 13), (-1, 13), 'Helvetica-Bold'),
+        ('BACKGROUND', (0, 13), (-1, 13), colors.yellowgreen),
+        ('LEFTPADDING', (0, 2), (0, 4), 20), # Indent earnings
+        ('LEFTPADDING', (0, 6), (0, 10), 20), # Indent deductions
     ]))
     elements.append(salary_table)
     elements.append(Spacer(1, 24))
@@ -134,4 +98,9 @@ def generate_payroll_pdf(emp):
     doc.build(elements, canvasmaker=CustomCanvas)
     buffer.seek(0)
 
-    return buffer
+    # Return the byte stream
+    return buffer.read()
+
+# NOTE: The name 'generate_pdf_from_html' is what app.py is looking for.
+# We map it to our new function that uses ReportLab's data structure.
+generate_pdf_from_html = create_pdf_from_payroll_data

@@ -12,7 +12,6 @@
 
 <form method="POST" action="{{ url_for('add_employee_route') }}" enctype="multipart/form-data">
     <div class="form-grid">
-        <!-- Left Column -->
         <div class="form-column">
             <div class="form-group">
                 <label for="name">Full Name</label>
@@ -30,18 +29,40 @@
             </div>
 
             <div class="form-group">
+                <label for="contact_number">Contact Number</label>
+                <input type="text" id="contact_number" name="contact_number" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="address">Address</label>
+                <input type="text" id="address" name="address" class="form-control">
+            </div>
+
+            <div class="form-group">
                 <label for="photo">Employee Photo</label>
                 <input type="file" id="photo" name="photo" class="form-control" accept="image/*">
             </div>
         </div>
         
-        <!-- Right Column -->
         <div class="form-column">
+            <div class="form-group">
+                <label for="date_hired">Hiring Date</label>
+                <input type="date" id="date_hired" name="date_hired" class="form-control" value="{{ current_date }}">
+            </div>
+
             <div class="form-group">
                 <label for="salary">Base Salary (Monthly)</label>
                 <div class="input-group">
                     <span class="input-group-text">₱</span>
                     <input type="number" id="salary" name="salary" class="form-control" step="0.01" min="0" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="hourly_rate">Hourly Rate (for Overtime)</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input type="number" id="hourly_rate" name="hourly_rate" class="form-control" step="0.01" min="0">
                 </div>
             </div>
 
@@ -53,25 +74,37 @@
                     <option value="Weekly">Weekly</option>
                 </select>
             </div>
-            
+
             <div class="form-group">
-                <label for="date">Hiring Date</label>
-                <input type="date" id="date" name="date" class="form-control" value="{{ current_date }}">
+                <label for="bank_account_number">Bank Account Number</label>
+                <input type="text" id="bank_account_number" name="bank_account_number" class="form-control">
             </div>
 
             <div class="form-group">
-                <label for="hourly_rate">Hourly Rate (if applicable)</label>
-                <div class="input-group">
-                    <span class="input-group-text">₱</span>
-                    <input type="number" id="hourly_rate" name="hourly_rate" class="form-control" step="0.01" min="0">
-                </div>
+                <label for="tin_number">TIN (For Tax)</label>
+                <input type="text" id="tin_number" name="tin_number" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="sss_number">SSS Number</label>
+                <input type="text" id="sss_number" name="sss_number" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="philhealth_number">PhilHealth Number</label>
+                <input type="text" id="philhealth_number" name="philhealth_number" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="pagibig_number">Pag-IBIG Number</label>
+                <input type="text" id="pagibig_number" name="pagibig_number" class="form-control">
             </div>
         </div>
     </div>
     
     <div class="form-actions">
         <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Cancel</a>
-        <button type="submit" class="btn btn-action btn-blue">
+        <button type="submit" class="btn btn-action">
             <i class="bi bi-person-plus-fill me-1"></i> Add Employee
         </button>
     </div>

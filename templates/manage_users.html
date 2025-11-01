@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+
+<div class="card">
+    <div class="card-header">
+        <h3>All System Users ({{ users|length }})</h3>
+    </div>
+    <div class="table-wrapper">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Linked Employee</th>
+                    <th>Is Admin?</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <form method="POST" action="{{ url_for('manage_users') }}">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <td>
+                            <strong>{{ user.username }}</strong>
+                        </td>
+                        <td>
+                            <select name="employee_id" class="form-control">
+                                <option value="">--- Not Linked ---</option>
+                                {% for employee in employees %}
+                                <option value="{{ employee.id }}" {% if user.employee_id == employee.id %}selected{% endif %}>
+                                    {{ employee.name }} (ID: {{ employee.id }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <input type="checkbox" name="is_admin" value="1" {% if user.is_admin %}checked{% endif %} 
+                                   style="width: 1.5rem; height: 1.5rem;">
+                        </td>
+                        <td>
+                            <button type="submit" class="btn btn-action btn-blue">
+                                <i class="bi bi-save-fill me-1"></i> Save
+                            </button>
+                        </td>
+                    </form>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 1.5rem;">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>How to use this page:</h3>
+    </div>
+    <div style="padding: 1.5rem;">
+        <p>This page connects a login account (a "User") to a payroll profile (an "Employee").</p>
+        <ol>
+            <li>First, an employee must create an account on the <a href="{{ url_for('register') }}">Register</a> page.</li>
+            <li>Once they appear here, you (the admin) must select their corresponding Employee profile from the dropdown list.</li>
+            <li>Click "Save" to link the account.</li>
+            <li>Check the "Is Admin?" box *only* for users who should have access to this admin dashboard.</li>
+        </ol>
+        <p>Once linked, the employee can log in and will be directed to their personal employee dashboard.</p>
+    </div>
+</div>
+
+{% endblock %}

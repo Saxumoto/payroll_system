@@ -27,11 +27,21 @@
             <li class="{% if request.endpoint == 'employee_list' %}active{% endif %}">
                 <a href="{{ url_for('employee_list') }}"><i class="bi bi-people-fill"></i> Employees</a>
             </li>
+            <li class="{% if request.endpoint == 'manage_leave' %}active{% endif %}">
+                <a href="{{ url_for('manage_leave') }}"><i class="bi bi-calendar-check-fill"></i> Leave Requests</a>
+            </li>
             <li class="{% if request.endpoint == 'add_employee_route' %}active{% endif %}">
                 <a href="{{ url_for('add_employee_route') }}"><i class="bi bi-person-plus-fill"></i> Add Employee</a>
             </li>
+            <li class="{% if request.endpoint == 'manage_users' %}active{% endif %}">
+                <a href="{{ url_for('manage_users') }}"><i class="bi bi-person-gear"></i> User Management</a>
+            </li
             <li>
-                <a href="#"><i class="bi bi-calculator-fill"></i> Process Payroll</a>
+                <form action="{{ url_for('process_payroll') }}" method="POST" onsubmit="return confirm('This will process payroll for all employees for the current month. Are you sure?');" style="margin: 0;">
+                    <button type="submit" class="btn-as-link">
+                        <i class="bi bi-calculator-fill"></i> Process Payroll
+                    </button>
+            </form>
             </li>
             <li>
                 <a href="#"><i class="bi bi-file-earmark-text-fill"></i> Reports</a>
@@ -54,8 +64,9 @@
             <div class="user-info">
                 <i class="bi bi-bell-fill"></i>
                 <span class="username">{{ current_user.username }}</span>
-                <img src="{{ url_for('static', filename='uploads/default.png') }}" alt="User" class="user-avatar">
-            </div>
+                    <img src="{{ url_for('static', filename='uploads/' + (current_user.photo if current_user.photo else 'default.png')) }}" 
+                        alt="User" class="user-avatar"
+                        onerror="this.src='{{ url_for('static', filename='uploads/default.png') }}';">            </div>
         </header>
 
         <main class="content-area">

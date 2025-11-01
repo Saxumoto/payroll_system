@@ -5,8 +5,6 @@
 
 {% block content %}
 
-<!-- Main Employee List Card -->
-
 <div class="card">
 <div class="card-header">
 <div class="card-header-content">
@@ -26,6 +24,7 @@
                 <th>Position</th>
                 <th>Department</th>
                 <th>Salary</th>
+                <th>Tax</th>
                 <th>Net Pay</th>
                 <th>Actions</th>
             </tr>
@@ -43,6 +42,7 @@
                 <td>{{ employee.position }}</td>
                 <td>{{ employee.department }}</td>
                 <td>₱{{ "%.2f"|format(employee.salary) }}</td>
+                <td>₱{{ "%.2f"|format(employee.tax) }}</td>
                 <td>₱{{ "%.2f"|format(employee.net_salary) }}</td>
                 <td class="actions">
                     <a href="{{ url_for('view_payroll', emp_id=employee.id) }}" class="btn btn-sm btn-info" title="View Payslip">
@@ -52,7 +52,13 @@
                     <a href="{{ url_for('edit_employee', employee_id=employee.id) }}" class="btn btn-sm btn-warning" title="Edit">
                         <i class="bi bi-pencil-fill"></i>
                     </a>
-                    <form action="{{ url_for('delete_employee_route', emp_id=employee.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this employee?');">
+                    <a href="{{ url_for('manage_loans', emp_id=employee.id) }}" class="btn btn-sm btn-success" title="Manage Loans">
+                        <i class="bi bi-cash-coin"></i>
+                    </a>
+                    <a href="{{ url_for('manage_attendance', emp_id=employee.id) }}" class="btn btn-sm btn-dark" title="Manage Attendance" style="background-color: #343a40; color: white;">
+                        <i class="bi bi-clock-fill"></i>
+                    </a>
+                    <form action="{{ url_for('delete_employee_route', emp_id=employee.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to archive this employee?');">
                         <button type="submit" class="btn btn-sm btn-danger" title="Delete">
                             <i class="bi bi-trash-fill"></i>
                         </button>
@@ -62,15 +68,14 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="7" style="text-align: center; padding: 1.5rem;">No employees found.</td>
+                <td colspan="8" style="text-align: center; padding: 1.5rem;">No employees found.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-<!-- Summary Row -->
-<div class.table-summary">
+<div class="table-summary">
     <div class="summary-item">
         <strong>Total Salary:</strong> ₱{{ total_salary }}
     </div>
@@ -82,6 +87,9 @@
     </div>
     <div class="summary-item">
         <strong>Total Pag-IBIG:</strong> ₱{{ total_pagibig }}
+    </div>
+    <div class="summary-item">
+        <strong>Total Tax:</strong> ₱{{ total_tax }}
     </div>
     <div class="summary-item">
         <strong>Total Net Pay:</strong> ₱{{ net_total }}

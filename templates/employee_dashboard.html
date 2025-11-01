@@ -1,0 +1,76 @@
+{% extends 'employee_base.html' %}
+
+{% block title %}My Dashboard{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+
+<div class="card form-card">
+    <div class="card-header">
+        <h3>My Information</h3>
+    </div>
+    
+    <div class="form-grid" style="padding: 1.5rem;">
+        <div class="form-column">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" class="form-control" value="{{ employee_data.name }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Contact Number</label>
+                <input type="text" class="form-control" value="{{ employee_data.contact_number or 'N/A' }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" class="form-control" value="{{ employee_data.address or 'N/A' }}" readonly>
+            </div>
+        </div>
+        
+        <div class="form-column">
+            <div class="form-group">
+                <label>Position</label>
+                <input type="text" class="form-control" value="{{ employee_data.position }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Department</label>
+                <input type="text" class="form-control" value="{{ employee_data.department }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Date Hired</label>
+                <input type="text" class="form-control" value="{{ employee_data.date_hired }}" readonly>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card form-card">
+    <div class="card-header">
+        <h3>My Payroll Information</h3>
+    </div>
+    
+    <div class="form-grid" style="padding: 1.5rem;">
+        <div class="form-column">
+            <div class="form-group">
+                <label>SSS Number</label>
+                <input type="text" class="form-control" value="{{ employee_data.sss_number or 'N/A' }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>PhilHealth Number</label>
+                <input type="text" class="form-control" value="{{ employee_data.philhealth_number or 'N/A' }}" readonly>
+            </div>
+        </div>
+        
+        <div class="form-column">
+            <div class="form-group">
+                <label>Pag-IBIG Number</label>
+                <input type="text" class="form-control" value="{{ employee_data.pagibig_number or 'N/A' }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>TIN</label>
+                <input type="text" class="form-control" value="{{ employee_data.tin_number or 'N/A' }}" readonly>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

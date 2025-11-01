@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Loans - {{ employee.name }}{% endblock %}
+{% block page_title %}Manage Loans for {{ employee.name }}{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-columns">
+
+    <div class="card form-card">
+        <div class="card-header">
+            <h3>Add New Loan</h3>
+        </div>
+        <form method="POST" action="{{ url_for('manage_loans', emp_id=employee.id) }}" style="padding: 1.5rem;">
+            <div class="form-group">
+                <label for="loan_name">Loan Name</label>
+                <input type="text" id="loan_name" name="loan_name" class="form-control" value="Company Loan" required>
+            </div>
+            <div class="form-group">
+                <label for="total_amount">Total Loan Amount</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input type="number" id="total_amount" name="total_amount" class="form-control" step="0.01" min="0" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="monthly_deduction">Monthly Deduction Amount</label>
+                <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input type="number" id="monthly_deduction" name="monthly_deduction" class="form-control" step="0.01" min="0" required>
+                </div>
+            </div>
+            <div class="form-actions" style="border-top: none; padding-top: 0;">
+                <button type="submit" class="btn btn-action">
+                    <i class="bi bi-plus-circle-fill me-1"></i> Add Loan
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Active Loans</h3>
+        </div>
+        <div class="table-wrapper">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Loan</th>
+                        <th>Total Amount</th>
+                        <th>Amount Paid</th>
+                        <th>Monthly Deduction</th>
+                        <th>Remaining</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for loan in loans %}
+                    <tr>
+                        <td>{{ loan.loan_name }}</td>
+                        <td>₱{{ "%.2f"|format(loan.total_amount) }}</td>
+                        <td>₱{{ "%.2f"|format(loan.amount_paid) }}</td>
+                        <td>₱{{ "%.2f"|format(loan.monthly_deduction) }}</td>
+                        <td>₱{{ "%.2f"|format(loan.total_amount - loan.amount_paid) }}</td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-warning" title="Mark as Paid" onclick="alert('Functionality to be added'); return false;">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 1.5rem;">No active loans found for this employee.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
